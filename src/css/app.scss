@@ -1,0 +1,81 @@
+.body--dark {
+    background-color: $dark-page !important;
+    color: #e0e0e0;
+  
+    .q-page {
+      background-color: $dark-page;
+      color: #e0e0e0;
+    }
+  
+    .q-card, .q-menu {
+      background-color: $dark !important;
+      color: #e0e0e0;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+    }
+  
+    .q-btn {
+      &.bg-green {
+        background-color: $positive !important;
+        color: white;
+      }
+      &.bg-red {
+        background-color: $negative !important;
+        color: white;
+      }
+      &.bg-primary {
+        background-color: $primary !important;
+        color: white;
+      }
+    }
+
+    .q-icon {
+      color: white !important;
+    }
+  
+    .q-select__control {
+      background-color: $dark;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+  
+    .q-field__label {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  
+    .q-select__dropdown-icon {
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  .body--dark .q-dark-fix {
+    color: white !important;
+  }
+
+  .body--dark .q-dark-fix .q-item__section,
+  .body--dark .q-dark-fix .q-item__label,
+  .body--dark .q-dark-fix .q-icon {
+    color: white !important;
+  }
+
+  .body--dark .router-link-active,
+  .body--dark .router-link-exact-active {
+    color: white !important;
+  }
+  
+  .table-dark thead {
+    background-color: #2a2a2a;
+    color: white;
+  }
+  
+  .table-light thead {
+    background-color: #F2F2F2;
+  }
+
+  .custom-header {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+  }
+
+  .q-card {
+    background-color: #F2F2F2;
+  }
