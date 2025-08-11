@@ -3,7 +3,7 @@
         <div class="column items-center">
             <div ref="registerRef" class="q-mb-md" style="width: 100px; max-width: 90vw; height: auto;" />
 
-            <div class="text-h6 q-mt-sm q-mb-md">Informações do Evento</div>
+            <div class="text-h6 q-mt-sm q-mb-md">Termos de Aceite</div>
 
             <q-card flat bordered style="max-width: 1100px; width: 100%;">
                 <q-card-section v-if="hasEvent">
@@ -34,11 +34,11 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { useEventTermPage } from './EventTermPage';
-import './EventTermPage.scss';
+import { useEventTermAcceptedPage } from './EventTermAcceptedPage';
+import './EventTermAcceptedPage.scss';
 import lottie from 'lottie-web'
 
-const { hasEvent, safeHtml, accepted, onBack, onNext } = useEventTermPage();
+const { hasEvent, safeHtml, accepted, onBack, onNext } = useEventTermAcceptedPage();
 const registerRef = ref<HTMLElement | null>(null)
 
 onMounted(() => {

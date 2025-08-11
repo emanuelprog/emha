@@ -51,6 +51,10 @@
         </q-btn>
       </div>
     </div>
+
+    <div v-if="hostName" class="text-weight-bold text-center bg-negative q-py-sm">
+      AMBIENTE DE HOMOLOGAÇÃO
+    </div>
   </q-header>
 
   <ConfigModal v-model="showConfigModal" />
@@ -75,9 +79,10 @@ const navItems = [
   { label: 'Área do Mutuário', route: 'area-do-mutuario' },
   { label: 'Cadastrados', route: 'cadastrados' },
   { label: 'Beneficiados', route: 'beneficiados' },
-  { label: '2ª via de Protocolo', route: 'segunda-via' },
-  { label: 'FAQ', route: 'faq' }
+  { label: '2ª via de Protocolo', route: 'segunda-via' }
 ]
+
+const hostName = window.location.hostname.includes("-h") || window.location.hostname.includes("localhost");
 
 function login() {
   void keycloak.login({ redirectUri: window.location.origin + '/inicio' })

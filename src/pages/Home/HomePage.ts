@@ -12,7 +12,7 @@ export function useHomePage() {
     {
       title: 'Cadastro',
       description: 'Cadastre-se para receber benefício de habitação',
-      route: 'cadastro',
+      route: '/cadastro',
       animationPath: '/animations/register.json',
       bg: 'bg-primary',
       text: 'text-white',
@@ -22,7 +22,7 @@ export function useHomePage() {
     {
       title: 'Área do Mutuário',
       description: 'Acesse sua Área',
-      route: 'area-do-mutuario',
+      route: '/area-do-mutuario',
       animationPath: '/animations/borrower.json',
       bg: 'bg-grey-2',
       text: 'text-dark',
@@ -49,12 +49,12 @@ export function useHomePage() {
   }
 
   async function goToInscription(event: EventType) {
-    await router.push({ path: 'termo-evento' })
     eventStore.setSelectedEvent(event);
+    await router.push('/termo-evento')
   }
 
   async function goToRoute(route: string) {
-    await router.push({ path: route })
+    await router.push(route)
   }
 
   return { cards, events, slide, loadEvents, formatDate, formatTime, goToInscription, goToRoute }

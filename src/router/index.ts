@@ -6,11 +6,15 @@ import {
   createWebHistory,
 } from 'vue-router';
 import routes from './routes';
+import { useEventStore } from 'src/stores/eventStore';
+import { useTermStore } from 'src/stores/termStore';
 
 export default defineRouter(function () {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
-    : (process.env.VUE_ROUTER_MODE === 'history' ? createWebHistory : createWebHashHistory);
+    : (process.env.VUE_ROUTER_MODE === 'history'
+      ? createWebHistory
+      : createWebHashHistory);
 
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
@@ -19,8 +23,16 @@ export default defineRouter(function () {
   });
 
   Router.beforeEach((to, from, next) => {
-    if (to.meta.requiresUser) {
+
+    const eventStore = useEventStore();
+    const termStore = useTermStore();
+
+    if (to.meta.requiresEvent && !eventStore.selectedEvent) {
       return next('/inicio');
+    }
+
+    if (to.meta.requiresEvent && to.meta.requiresEventTerm && !termStore.eventTerm) {
+      return next('/termo-evento')
     }
 
     next();

@@ -1,7 +1,7 @@
 export interface AddressType {
     id: number;
     zipCode: string;
-    logradouro: string;
+    street: string;
     city: string;
     region: string;
     neighborhood: string;

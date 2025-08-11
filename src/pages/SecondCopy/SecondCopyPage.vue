@@ -59,20 +59,69 @@
 
                         <div class="row q-col-gutter-md">
                             <template v-for="(field, index) in section.fields" :key="index">
-                                <q-input v-if="field.type === 'text'" type="text" :label="field.label"
-                                    :mask="field.mask" :model-value="getPersonOnlineValue(field.key)" filled readonly
+                                <q-input v-if="field.type === 'text' && evalCond(field, personOnline)" type="text"
+                                    :label="field.label" :mask="field.mask" :title="field.label"
+                                    :model-value="getPersonOnlineString(field.key)" filled readonly
                                     :class="field.cols" />
 
-                                <q-input v-if="field.type === 'number'" type="number" :label="field.label"
-                                    :mask="field.mask" :model-value="getPersonOnlineValue(field.key)" filled readonly
+                                <q-input v-if="field.type === 'number' && evalCond(field, personOnline)" type="number"
+                                    :label="field.label" :mask="field.mask" :title="field.label"
+                                    :model-value="getPersonOnlineNumber(field.key)" filled readonly
                                     :class="field.cols" />
 
-                                <q-checkbox v-if="field.type === 'checkbox'" :label="field.label" type="checkbox"
-                                    :model-value="getPersonOnlineValue(field.key)" :class="field.cols + ' q-mt-sm'"
-                                    disable />
+                                <q-select v-if="field.type === 'select' && evalCond(field, personOnline)"
+                                    :label="field.label" :options="field.options || []" option-label="label"
+                                    option-value="value" emit-value map-options
+                                    :model-value="getPersonOnlineSelect(field.key)" filled readonly disable
+                                    :class="field.cols" />
+
+                                <div v-if="field.type === 'radio' && evalCond(field, personOnline)" :class="field.cols">
+                                    <div class="text-subtitle2 q-mb-xs">
+                                        {{ field.label }}
+                                        <q-icon v-if="field.info" name="help" size="16px" class="q-ml-xs cursor-pointer"
+                                            color="primary">
+                                            <q-tooltip anchor="top middle" self="bottom middle">
+                                                {{ field.info }}
+                                            </q-tooltip>
+                                        </q-icon>
+                                    </div>
+                                    <q-option-group type="radio" :options="field.options || []"
+                                        :model-value="getPersonOnlineValue(field.key, field.type)" inline disable />
+                                </div>
+
+                                <div v-if="field.type === 'checkbox' && evalCond(field, personOnline)"
+                                    :class="field.cols">
+                                    <q-checkbox v-if="field.type === 'checkbox' && evalCond(field, personOnline)"
+                                        :label="field.label" :model-value="getPersonOnlineBoolean(field.key)" disable />
+                                    <q-icon v-if="field.info" name="help" size="16px" class="q-ml-xs cursor-pointer"
+                                        color="primary">
+                                        <q-tooltip anchor="top middle" self="bottom middle">
+                                            {{ field.info }}
+                                        </q-tooltip>
+                                    </q-icon>
+                                </div>
                             </template>
                         </div>
                     </q-card>
+
+                    <div v-if="section.title === 'Dependentes'" class="row q-col-gutter-md q-mt-md"
+                        style="width: 100%;">
+
+                        <div class="col-12 col-md-6">
+                            <div class="text-subtitle2 text-weight-medium q-mb-sm">Doença Crônica</div>
+                            <q-table flat dense square separator="cell" :rows="chronicDiseaseRows"
+                                :table-class="$q.dark.isActive ? 'table-dark' : 'table-light'" :columns="chronicColumns"
+                                row-key="__key" hide-bottom style="width: 100%;" />
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <div class="text-subtitle2 text-weight-medium q-mb-sm">Deficiência</div>
+                            <q-table flat dense square separator="cell" :rows="disabilityRows"
+                                :table-class="$q.dark.isActive ? 'table-dark' : 'table-light'"
+                                :columns="disabilityColumns" row-key="__key" hide-bottom style="width: 100%;" />
+                        </div>
+
+                    </div>
                 </template>
             </div>
 
@@ -114,6 +163,7 @@ import lottie from 'lottie-web';
 const secondCopyRef = ref<HTMLElement | null>(null);
 
 const {
+    loadSelectOptions,
     loading,
     form,
     personOnline,
@@ -139,10 +189,19 @@ const {
     pagination,
     onPrintInscription,
     onBackRegister,
-    onBackEvent
+    onBackEvent,
+    evalCond,
+    getPersonOnlineString,
+    getPersonOnlineNumber,
+    getPersonOnlineBoolean,
+    getPersonOnlineSelect,
+    chronicColumns,
+    disabilityColumns,
+    chronicDiseaseRows,
+    disabilityRows,
 } = useSecondCopyPage();
 
-onMounted(() => {
+onMounted(async () => {
     if (secondCopyRef.value) {
         lottie.loadAnimation({
             container: secondCopyRef.value,
@@ -152,5 +211,7 @@ onMounted(() => {
             path: '/animations/second-copy.json',
         });
     }
+
+    await loadSelectOptions();
 });
 </script>
