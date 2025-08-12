@@ -18,7 +18,7 @@
                 <q-input v-model="form.cpf" label="CPF" filled :error="validate && !form.cpf"
                     error-message="Campo obrigatório" class="col-12 col-sm-6 col-md-3" mask="###.###.###-##" />
 
-                <q-input :model-value="personOnline?.name" label="Nome Completo" filled readonly
+                <q-input :model-value="personOnline?.name" label="Nome Completo" filled disable
                     class="col-12 col-sm-6 col-md-6" />
             </div>
 
@@ -36,13 +36,13 @@
 
             <div v-if="showValidateRegister && !showAll && !loading" class="row q-gutter-md justify-center q-my-lg">
                 <q-btn label="Validar" color="primary" @click="onValidate" :disable="loading" />
-                <q-btn label="Voltar" flat color="secondary" @click="onBackValidate" :disable="loading" />
+                <q-btn label="Voltar" flat color="grey-7" @click="onBackValidate" :disable="loading" />
             </div>
 
             <div v-if="showSelection" class="row q-gutter-md justify-center q-my-lg">
                 <q-btn label="Inscrições do Evento" color="primary" @click="onSelectInscriptionsEvent" />
                 <q-btn label="Protocolo" color="primary" @click="onSelectRegister" />
-                <q-btn label="Voltar" flat color="secondary" @click="onBackSelection" :disable="loading" />
+                <q-btn label="Voltar" flat color="grey-7" @click="onBackSelection" :disable="loading" />
             </div>
 
             <div v-if="showPersonOnlineFields && !loading && showAll" class="row q-col-gutter-md"
@@ -61,18 +61,18 @@
                             <template v-for="(field, index) in section.fields" :key="index">
                                 <q-input v-if="field.type === 'text' && evalCond(field, personOnline)" type="text"
                                     :label="field.label" :mask="field.mask" :title="field.label"
-                                    :model-value="getPersonOnlineString(field.key)" filled readonly
+                                    :model-value="getPersonOnlineString(field.key)" filled disable
                                     :class="field.cols" />
 
                                 <q-input v-if="field.type === 'number' && evalCond(field, personOnline)" type="number"
                                     :label="field.label" :mask="field.mask" :title="field.label"
-                                    :model-value="getPersonOnlineNumber(field.key)" filled readonly
+                                    :model-value="getPersonOnlineNumber(field.key)" filled disable
                                     :class="field.cols" />
 
                                 <q-select v-if="field.type === 'select' && evalCond(field, personOnline)"
                                     :label="field.label" :options="field.options || []" option-label="label"
                                     option-value="value" emit-value map-options
-                                    :model-value="getPersonOnlineSelect(field.key)" filled readonly disable
+                                    :model-value="getPersonOnlineSelect(field.key)" filled disable
                                     :class="field.cols" />
 
                                 <div v-if="field.type === 'radio' && evalCond(field, personOnline)" :class="field.cols">
@@ -128,7 +128,7 @@
             <div v-if="showPersonOnlineFields && !loading && showAll" class="row q-gutter-md justify-center q-my-lg">
                 <q-btn label="Imprimir Protocolo" color="primary" @click="onPrintSecondCopy" :disable="loading"
                     :loading="isSecondCopyLoading" />
-                <q-btn label="Voltar" flat color="secondary" @click="onBackRegister" :disable="loading" />
+                <q-btn label="Voltar" flat color="grey-7" @click="onBackRegister" :disable="loading" />
             </div>
 
             <div v-if="showEvent && !loading">
@@ -148,7 +148,7 @@
             </div>
 
             <div v-if="showEvent && !loading" class="row q-gutter-md justify-center q-my-lg">
-                <q-btn label="Voltar" flat color="secondary" @click="onBackEvent" :disable="loading" />
+                <q-btn label="Voltar" flat color="grey-7" @click="onBackEvent" :disable="loading" />
             </div>
         </div>
     </q-page>

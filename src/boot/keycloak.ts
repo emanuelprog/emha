@@ -15,20 +15,13 @@ export default boot(async ({ router }) => {
     console.error('Erro ao inicializar Keycloak', error);
   }
 
-  router.beforeEach((to, from, next) => {
-    const requiresAuth = to.meta.requiresAuth;
-    const isPublic = to.meta.public === true;
-
-    if (requiresAuth && !keycloak.authenticated) {
-      void keycloak.login();
-    } else if (isPublic) {
-      next();
-    }
-  });
-
   router.afterEach(() => {
     if (window.location.hash.includes('state=')) {
-      window.history.replaceState(null, '', window.location.pathname);
+      window.history.replaceState(
+        { ...window.history.state },
+        '',
+        window.location.pathname
+      );
     }
   });
 });

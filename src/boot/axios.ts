@@ -8,7 +8,7 @@ declare module 'vue' {
   }
 }
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API });
+const api = axios.create({ baseURL: process.env.VITE_API! });
 
 api.interceptors.request.use((config) => {
   const token = sessionStorage.getItem('accessToken');

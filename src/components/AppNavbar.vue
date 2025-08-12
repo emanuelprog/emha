@@ -66,12 +66,17 @@ import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import ConfigModal from 'src/components/ConfigModal.vue'
 import keycloak from 'src/services/keycloakService'
+import { useTermStore } from 'src/stores/termStore'
+import { useEventStore } from 'src/stores/eventStore'
 
 const $q = useQuasar()
 const router = useRouter()
 const showConfigModal = ref(false)
 
 const userName = computed(() => keycloak.tokenParsed?.name + ' ' + keycloak.tokenParsed?.lastName || 'Usuário');
+
+const termStore = useTermStore();
+const eventStore = useEventStore();
 
 const navItems = [
   { label: '', route: 'inicio', icon: 'home' },
@@ -107,6 +112,8 @@ function logout() {
       clearInterval(interval)
       notif()
       sessionStorage.clear()
+      termStore.clear()
+      eventStore.clear()
       void keycloak.logout({ redirectUri: window.location.origin + '/inicio' })
     }
   }, 1000)

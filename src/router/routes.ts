@@ -15,8 +15,56 @@ const routes: RouteRecordRaw[] = [
       { path: 'termo-evento', component: () => import('pages/EventTerm/EventTermPage.vue'), meta: { public: true, requiresEvent: true } },
       {
         path: 'termo-evento-aceite', component: () => import('pages/EventTermAccepted/EventTermAcceptedPage.vue'),
-        meta: { public: true, requiresEvent: true, requiresEventTerm: true }
+        meta: { requiresAuth: true, requiresEvent: true, requiresEventTerm: true }
       },
+      {
+        path: 'modulo-evento', component: () => import('pages/EventModule/EventModulePage.vue'),
+        meta: { requiresAuth: true, requiresEvent: true, requiresEventTerm: true, requiresEventTermAccepted: true }
+      },
+      {
+        path: 'valida-formulario-evento',
+        component: () => import('pages/ValidateForm/ValidateFormPage.vue'),
+        meta: {
+          requiresAuth: true,
+          validationType: 'event',
+          requiresEventTerm: true,
+          requiresEventTermAccepted: true,
+          requiresEventComponent: true
+        }
+      },
+      {
+        path: 'valida-formulario-cadastro',
+        component: () => import('pages/ValidateForm/ValidateFormPage.vue'),
+        meta: {
+          requiresAuth: true,
+          validationType: 'register',
+          requiresRegisterTermDocument: true,
+          requiresRegisterTermRequirement: true,
+          requiresRegisterTermAccepted: true
+        }
+      },
+      {
+        path: 'formulario-evento',
+        component: () => import('pages/FormPersonOnline/FormPersonOnlinePage.vue'),
+        meta: {
+          requiresAuth: true,
+          validationType: 'event',
+          requiresEventTerm: true,
+          requiresEventTermAccepted: true,
+          requiresEventComponent: true
+        }
+      },
+      {
+        path: 'formulario-cadastro',
+        component: () => import('pages/FormPersonOnline/FormPersonOnlinePage.vue'),
+        meta: {
+          requiresAuth: true,
+          validationType: 'register',
+          requiresRegisterTermDocument: true,
+          requiresRegisterTermRequirement: true,
+          requiresRegisterTermAccepted: true
+        }
+      }
     ],
   },
 ];

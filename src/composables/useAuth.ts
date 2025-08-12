@@ -12,7 +12,11 @@ async function initialize() {
     state.authenticated = keycloak.authenticated ?? false;
 
     if (window.location.hash.includes('state=')) {
-      window.history.replaceState(null, '', window.location.pathname);
+      window.history.replaceState(
+        { ...window.history.state },
+        '',
+        window.location.pathname
+      );
     }
 
     if (state.authenticated) {

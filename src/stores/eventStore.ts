@@ -1,30 +1,32 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { EventType } from 'src/types/eventType';
-import type { CommercialModuleType } from 'src/types/commercialModuleType';
+import type { EventComponentType } from 'src/types/eventComponentType';
 
 export const useEventStore = defineStore('event', () => {
     const selectedEvent = ref<EventType | null>(null);
-    const selectedCommercialModule = ref<CommercialModuleType | null>(null);
+    const selectedEventComponent = ref<EventComponentType | null>(null);
 
     function setSelectedEvent(event: EventType | null) {
         selectedEvent.value = event;
     }
 
-    function setSelectedCommercialModule(commercialModule: CommercialModuleType | null) {
-        selectedCommercialModule.value = commercialModule;
+    function setSelectedEventComponent(EventComponent: EventComponentType | null) {
+        selectedEventComponent.value = EventComponent;
     }
 
     function clear() {
         selectedEvent.value = null;
-        selectedCommercialModule.value = null;
+        selectedEventComponent.value = null;
     }
 
     return {
         selectedEvent,
-        selectedCommercialModule,
+        selectedEventComponent,
         setSelectedEvent,
-        setSelectedCommercialModule,
+        setSelectedEventComponent,
         clear
     };
+}, {
+    persist: true
 });

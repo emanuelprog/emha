@@ -277,7 +277,7 @@ const personOnlineFieldSections = ref<FieldSection[]>([
                     { label: 'Sim', value: true },
                     { label: 'Não', value: false }
                 ],
-                condition: (p) => p?.ethnicity.toUpperCase() === 'NEGRA'
+                condition: (p) => p?.ethnicity?.toUpperCase() === 'NEGRA'
             },
             {
                 key: 'indigenousEthnicity',
@@ -298,7 +298,7 @@ const personOnlineFieldSections = ref<FieldSection[]>([
                     { label: 'OUTROS', value: 'OUTROS' }
                 ],
                 cols: 'col-12 col-sm-6 col-md-4',
-                condition: (p) => p?.ethnicity.toUpperCase() === 'VERMELHA (INDÍGENA)'
+                condition: (p) => p?.ethnicity?.toUpperCase() === 'VERMELHA (INDÍGENA)'
             },
             {
                 key: 'livesInVillage',
@@ -309,7 +309,7 @@ const personOnlineFieldSections = ref<FieldSection[]>([
                     { label: 'Sim', value: true },
                     { label: 'Não', value: false }
                 ],
-                condition: (p) => p?.ethnicity.toUpperCase() === 'VERMELHA (INDÍGENA)'
+                condition: (p) => p?.ethnicity?.toUpperCase() === 'VERMELHA (INDÍGENA)'
             }
         ]
     },
@@ -460,7 +460,7 @@ const personOnlineFieldSections = ref<FieldSection[]>([
                     { label: 'Sim', value: true },
                     { label: 'Não', value: false }
                 ],
-                condition: (p) => p?.spouseEthnicity.toUpperCase() === 'NEGRA'
+                condition: (p) => p?.spouseEthnicity?.toUpperCase() === 'NEGRA'
             },
             {
                 key: 'spouseIndigenousEthnicity',
@@ -481,7 +481,7 @@ const personOnlineFieldSections = ref<FieldSection[]>([
                     { label: 'OUTROS', value: 'OUTROS' }
                 ],
                 cols: 'col-12 col-sm-6 col-md-4',
-                condition: (p) => p?.spouseEthnicity.toUpperCase() === 'VERMELHA (INDÍGENA)'
+                condition: (p) => p?.spouseEthnicity?.toUpperCase() === 'VERMELHA (INDÍGENA)'
             },
             {
                 key: 'spouseLivesInVillage',
@@ -492,7 +492,7 @@ const personOnlineFieldSections = ref<FieldSection[]>([
                     { label: 'Sim', value: true },
                     { label: 'Não', value: false }
                 ],
-                condition: (p) => p?.spouseEthnicity.toUpperCase() === 'VERMELHA (INDÍGENA)'
+                condition: (p) => p?.spouseEthnicity?.toUpperCase() === 'VERMELHA (INDÍGENA)'
             },
             {
                 key: 'spouseHasCancer',

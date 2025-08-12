@@ -11,3 +11,9 @@ export async function fetchPersonOnlineByFilters(filter: PersonOnlineFilter) {
 
     return response.data.obj;
 }
+
+export async function fetchSpouse(filter: PersonOnlineFilter) {
+    const response = await api.post('/person-online/spouse', filter);
+
+    return response.data.obj;
+}

@@ -21,10 +21,10 @@
 
                 <div v-if="(showName || showCpf) && !loading" class="row q-col-gutter-md justify-center"
                     style="max-width: 1200px; width: 100%">
-                    <q-input :model-value="contract?.number" label="Código do Contrato" filled readonly
+                    <q-input :model-value="contract?.number" label="Código do Contrato" filled disable
                         class="col-12 col-sm-6 col-md-3" />
 
-                    <q-input :model-value="contract?.sequence" label="Sequencial" filled readonly
+                    <q-input :model-value="contract?.sequence" label="Sequencial" filled disable
                         class="col-12 col-sm-6 col-md-3" />
 
                     <q-input v-if="showName" v-model="form.name" label="Nome" type="text" filled
@@ -56,7 +56,7 @@
 
                         <div class="row q-col-gutter-md">
                             <q-input v-for="(field, index) in section.fields" :key="index" :label="field.label"
-                                :mask="field.mask" :model-value="getContractValue(field.key)" filled readonly
+                                :mask="field.mask" :model-value="getContractValue(field.key)" filled disable
                                 :class="field.cols" />
                         </div>
                     </q-card>
@@ -187,7 +187,7 @@
                 </div>
 
                 <div class="row q-gutter-md justify-center q-my-lg">
-                    <q-btn label="Voltar" color="primary" @click="onBack" />
+                    <q-btn label="grey-7" color="primary" @click="onBack" />
                 </div>
             </div>
 

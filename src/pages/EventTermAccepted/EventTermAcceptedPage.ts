@@ -18,13 +18,15 @@ export function useEventTermAcceptedPage() {
     });
 
     function onBack() {
+        termStore.setSelectedEventTermAccepted(false);
+        termStore.setSelectedEventTerm(false);
         router.back();
     }
 
     async function onNext() {
         if (!hasEvent.value || !accepted.value) return;
 
-        termStore.setSelectedEventTerm(true);
+        termStore.setSelectedEventTermAccepted(true);
         await router.push('/modulo-evento');
     }
 

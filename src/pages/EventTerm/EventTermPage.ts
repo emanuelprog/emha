@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router';
 import { useEventStore } from 'src/stores/eventStore';
 import DOMPurify from 'dompurify';
 import { useTermStore } from 'src/stores/termStore';
+import keycloak from 'src/services/keycloakService';
 
 export function useEventTermPage() {
     const router = useRouter();
@@ -18,6 +19,8 @@ export function useEventTermPage() {
     });
 
     function onBack() {
+        eventStore.clear();
+        termStore.clear();
         router.back();
     }
 
@@ -25,7 +28,12 @@ export function useEventTermPage() {
         if (!hasEvent.value || !accepted.value) return;
 
         termStore.setSelectedEventTerm(true);
-        await router.push('/termo-evento-aceite');
+
+        if (!keycloak.authenticated) {
+            void keycloak.login({ redirectUri: window.location.origin + '/termo-evento-aceite' });
+        } else {
+            await router.push('/termo-evento-aceite');
+        }
     }
 
     return { hasEvent, safeHtml, accepted, onBack, onNext };
