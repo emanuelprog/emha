@@ -18,24 +18,36 @@
                             <div class="row q-col-gutter-md">
                                 <template v-for="(field, index) in section.fields" :key="index">
                                     <q-input
-                                        v-if="field.type === 'text' && field.key !== 'income' && field.key !== 'formattedRentValue' && evalCond(field, personOnline)"
+                                        v-if="field.type === 'text' && field.key !== 'income' && field.key !== 'formattedRentValue' && field.key !== 'cep' && evalCond(field, personOnline)"
                                         type="text" :label="field.label" :mask="field.mask" :title="field.label"
                                         :model-value="getPersonOnlineString(field.key)" filled :disable="field.disable"
                                         @update:model-value="setPersonOnlineValue(field.key, $event)"
                                         :error="hasError(field)" :error-message="getErrorMessage(field)"
-                                        :data-key="field.key" :class="field.cols" />
+                                        :data-key="field.key"
+                                        :class="[{ 'required-label': isFieldRequired(field) }, field.cols]" />
+
+                                    <q-input
+                                        v-if="field.type === 'text' && field.key === 'cep' && evalCond(field, personOnline)"
+                                        type="text" :label="field.label" :mask="field.mask" :title="field.label"
+                                        :model-value="getPersonOnlineString(field.key)" filled :disable="field.disable"
+                                        @update:model-value="setPersonOnlineValue(field.key, $event)"
+                                        @blur="onCepBlur(getPersonOnlineString(field.key))" :error="hasError(field)"
+                                        :error-message="getErrorMessage(field)" :data-key="field.key"
+                                        :class="[{ 'required-label': isFieldRequired(field) }, field.cols]" />
 
                                     <q-input v-if="field.type === 'number' && evalCond(field, personOnline)"
                                         type="number" :label="field.label" :mask="field.mask" :title="field.label"
                                         :model-value="getPersonOnlineNumber(field.key)" filled :disable="field.disable"
                                         @update:model-value="setPersonOnlineValue(field.key, $event !== '' ? Number($event) : null)"
                                         :data-key="field.key" :error="hasError(field)"
-                                        :error-message="getErrorMessage(field)" :class="field.cols" />
+                                        :error-message="getErrorMessage(field)"
+                                        :class="[{ 'required-label': isFieldRequired(field) }, field.cols]" />
 
                                     <q-input
                                         v-if="field.key === 'income' || field.key === 'formattedRentValue' && evalCond(field, personOnline)"
                                         :label="field.label" v-model.number="incomeModel" inputmode="numeric" filled
-                                        :data-key="field.key" :disable="field.disable" :class="field.cols" />
+                                        :data-key="field.key" :disable="field.disable"
+                                        :class="[{ 'required-label': isFieldRequired(field) }, field.cols]" />
 
                                     <q-select v-if="field.type === 'select' && evalCond(field, personOnline)"
                                         :label="field.label" :options="field.options || []" option-label="label"
@@ -44,11 +56,12 @@
                                         :data-key="field.key" :error="hasError(field)"
                                         :error-message="getErrorMessage(field)"
                                         @update:model-value="setPersonOnlineValue(field.key, $event)"
-                                        :class="field.cols" />
+                                        :class="[{ 'required-label': isFieldRequired(field) }, field.cols]" />
 
                                     <div v-if="field.type === 'radio' && evalCond(field, personOnline)"
-                                        :class="field.cols">
-                                        <div class="text-subtitle2 q-mb-xs">
+                                        :class="[field.cols]">
+                                        <div class="text-subtitle2 q-mb-xs"
+                                            :class="{ 'required-label-radio': isFieldRequired(field) }">
                                             {{ field.label }}
                                             <q-icon v-if="field.info" name="help" size="16px"
                                                 class="q-ml-xs cursor-pointer" color="primary">
@@ -57,32 +70,45 @@
                                                 </q-tooltip>
                                             </q-icon>
                                         </div>
-                                        <q-option-group type="radio" :options="field.options || []"
-                                            :model-value="getPersonOnlineValue(field.key, field.type)" inline
-                                            @update:model-value="setPersonOnlineValue(field.key, $event)"
-                                            :data-key="field.key" :error="hasError(field)"
-                                            :error-message="getErrorMessage(field)" :disable="field.disable" />
+                                        <q-field borderless :error="hasError(field)"
+                                            :error-message="getErrorMessage(field)">
+                                            <template v-slot:control>
+                                                <q-option-group type="radio" :options="field.options || []"
+                                                    :model-value="getPersonOnlineValue(field.key, field.type)"
+                                                    @update:model-value="setPersonOnlineValue(field.key, $event)"
+                                                    :data-key="field.key" :disable="field.disable" inline />
+                                            </template>
+                                        </q-field>
                                     </div>
 
                                     <div v-if="field.type === 'checkbox' && evalCond(field, personOnline)"
-                                        :class="field.cols">
-                                        <q-checkbox v-if="field.type === 'checkbox' && evalCond(field, personOnline)"
-                                            :label="field.label" :model-value="getPersonOnlineBoolean(field.key)"
-                                            :data-key="field.key"
-                                            @update:model-value="setPersonOnlineValue(field.key, $event)"
-                                            :error="hasError(field)" :error-message="getErrorMessage(field)"
-                                            :disable="field.disable" />
-                                        <q-icon v-if="field.info" name="help" size="16px" class="q-ml-xs cursor-pointer"
-                                            color="primary">
-                                            <q-tooltip anchor="top middle" self="bottom middle">
-                                                {{ field.info }}
-                                            </q-tooltip>
-                                        </q-icon>
+                                        :class="[field.cols]">
+                                        <q-field borderless :error="hasError(field)"
+                                            :error-message="getErrorMessage(field)"
+                                            :class="{ 'required-label-checkbox': isFieldRequired(field) }">
+                                            <template v-slot:control>
+                                                <div class="row items-center no-wrap">
+                                                    <q-checkbox :label="field.label"
+                                                        :model-value="getPersonOnlineBoolean(field.key)"
+                                                        :data-key="field.key"
+                                                        @update:model-value="setPersonOnlineValue(field.key, $event)"
+                                                        :disable="field.disable" />
+
+                                                    <q-icon v-if="field.info" name="help" size="16px"
+                                                        class="q-ml-xs cursor-pointer" color="primary">
+                                                        <q-tooltip anchor="top middle" self="bottom middle">
+                                                            {{ field.info }}
+                                                        </q-tooltip>
+                                                    </q-icon>
+                                                </div>
+                                            </template>
+                                        </q-field>
                                     </div>
 
                                     <q-input v-if="field.type === 'date' && evalCond(field, personOnline)"
                                         :label="field.label" :mask="field.mask || '##/##/####'" :title="field.label"
-                                        :model-value="getPersonOnlineString(field.key)" filled :class="field.cols"
+                                        :model-value="getPersonOnlineString(field.key)" filled
+                                        :class="[{ 'required-label': isFieldRequired(field) }, field.cols]"
                                         :data-key="field.key" :error="hasError(field)"
                                         :error-message="getErrorMessage(field)"
                                         @update:model-value="setPersonOnlineValue(field.key, $event)"
@@ -154,12 +180,27 @@
 
                                     <q-card-section>
                                         <q-input v-model="dependentForm.dependentsWithDisabilitiesNames"
-                                            label="Nome do Dependente" dense outlined />
+                                            label="Nome do Dependente" filled
+                                            :error="validateDependent && (dependentForm.dependentsWithDisabilitiesNames == null || dependentForm.dependentsWithDisabilitiesNames == '')"
+                                            error-message="Campo obrigatório" />
                                         <q-input v-model="dependentForm.descriptionOfDisabilities" label="Descrição"
-                                            dense outlined class="q-mt-sm" />
-                                        <q-toggle v-if="dependentType === 'chronic'"
-                                            v-model="dependentForm.hasDegenerativeDisease" label="Doença Degenerativa"
-                                            class="q-mt-sm" />
+                                            filled class="q-mt-sm"
+                                            :error="validateDependent && (dependentForm.descriptionOfDisabilities == null || dependentForm.descriptionOfDisabilities == '')"
+                                            error-message="Campo obrigatório" />
+                                        <div v-if="dependentType === 'chronic'" class="q-mt-sm">
+                                            <div class="text-subtitle2 q-mb-xs">Doença Degenerativa</div>
+                                            <q-field
+                                                :error="validateDependent && dependentForm.hasDegenerativeDisease === null"
+                                                error-message="Campo obrigatório" borderless>
+                                                <template v-slot:control>
+                                                    <q-option-group v-model="dependentForm.hasDegenerativeDisease"
+                                                        :options="[
+                                                            { label: 'Sim', value: true },
+                                                            { label: 'Não', value: false }
+                                                        ]" type="radio" color="primary" inline />
+                                                </template>
+                                            </q-field>
+                                        </div>
                                     </q-card-section>
 
                                     <q-card-actions align="right">
@@ -175,9 +216,10 @@
                 <q-separator class="q-mt-md" />
 
                 <q-card-actions align="between" class="q-pa-md">
-                    <q-btn label="Voltar" color="grey-7" flat @click="onBack" />
+                    <q-btn label="Voltar" color="grey-7" flat @click="onBack" :disable="loadingInscribe" />
                     <div class="row items-center q-gutter-sm">
-                        <q-btn :label="isRegister ? 'Cadastrar' : 'Inscrever'" color="positive" @click="onSubmit" />
+                        <q-btn :label="isRegister ? 'Cadastrar' : 'Inscrever'" color="positive" @click="onSubmit"
+                            :loading="loadingInscribe" :disable="loadingInscribe" />
                     </div>
                 </q-card-actions>
             </div>
@@ -192,6 +234,7 @@ import './FormPersonOnlinePage.scss';
 import lottie from 'lottie-web';
 
 const {
+    loadingInscribe,
     personOnline,
     onSubmit,
     onBack,
@@ -218,7 +261,10 @@ const {
     dependentForm,
     showDependentDialog,
     dependentType,
-    saveDependent
+    saveDependent,
+    validateDependent,
+    onCepBlur,
+    isFieldRequired
 } = useFormPersonOnlinePage();
 const registerRef = ref<HTMLElement | null>(null);
 

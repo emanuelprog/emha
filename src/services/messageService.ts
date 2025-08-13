@@ -5,7 +5,7 @@ export function notifySuccess(message: string) {
         type: 'positive',
         message,
         position: 'top-right',
-        timeout: 1000,
+        timeout: 2000,
         icon: 'check_circle'
     })
 }
@@ -15,7 +15,7 @@ export function notifyWarning(message: string) {
         type: 'warning',
         message,
         position: 'top-right',
-        timeout: 1000,
+        timeout: 2000,
         icon: 'warning'
     })
 }
@@ -25,7 +25,7 @@ export function notifyError(message: string) {
         type: 'negative',
         message,
         position: 'top-right',
-        timeout: 1000,
+        timeout: 2000,
         icon: 'error'
     })
 }
@@ -35,7 +35,7 @@ export function notifyInfo(message: string) {
         type: 'info',
         message,
         position: 'top-right',
-        timeout: 1000,
+        timeout: 2000,
         icon: 'info'
     })
 }

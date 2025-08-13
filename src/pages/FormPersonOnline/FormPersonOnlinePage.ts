@@ -1,13 +1,19 @@
+import axios from 'axios';
 import type { QTableColumn } from 'quasar';
+import { fetchAddressByCep } from 'src/services/addressService';
 import { fetchCharts } from 'src/services/chartService';
 import { fetchDeficiencies } from 'src/services/deficiencyService';
-import { notifyWarning } from 'src/services/messageService';
+import { createInscription, updateInscription } from 'src/services/inscriptionService';
+import { notifyError, notifyWarning } from 'src/services/messageService';
+import { createPersonOnline, updatePersonOnline } from 'src/services/personOnlineService';
 import { fetchProfessions } from 'src/services/professionService';
 import { useEventStore } from 'src/stores/eventStore';
+import { useInscriptionStore } from 'src/stores/inscriptionStore';
 import { usePersonOnlineStore } from 'src/stores/personOnlineStore';
 import { createDefaultDependent, type DependentType } from 'src/types/dependentType';
+import type { InscriptionType } from 'src/types/inscriptionType';
 import { createPersonOnlineForm, type PersonOnlineType } from 'src/types/personOnlineType';
-import { formatDate } from 'src/util/dateUtil';
+import { formatDate, toBRDate } from 'src/util/dateUtil';
 import { formatCurrencyBRL } from 'src/util/formatUtil';
 import { computed, nextTick, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -60,15 +66,15 @@ export function useFormPersonOnlinePage() {
                     label: 'Nome Completo',
                     cols: 'col-12 col-sm-6 col-md-6',
                     type: 'text',
-                    disable: true
+                    disable: true,
+                    required: true,
+                    requiredMessage: 'Nome Completo é obrigatório'
                 },
                 {
                     key: 'socialName',
                     label: 'Nome Social',
                     cols: 'col-12 col-sm-6 col-md-6',
-                    type: 'text',
-                    required: true,
-                    requiredMessage: 'Nome Social é obrigatório'
+                    type: 'text'
                 },
                 {
                     key: 'gender',
@@ -78,7 +84,9 @@ export function useFormPersonOnlinePage() {
                     options: [
                         { label: 'Masculino', value: 'M' },
                         { label: 'Feminino', value: 'F' }
-                    ]
+                    ],
+                    required: true,
+                    requiredMessage: 'Sexo é obrigatório'
                 },
                 {
                     key: 'birthDate',
@@ -86,7 +94,9 @@ export function useFormPersonOnlinePage() {
                     cols: 'col-12 col-sm-6 col-md-4',
                     type: 'date',
                     mask: '##/##/####',
-                    disable: true
+                    disable: true,
+                    required: true,
+                    requiredMessage: 'Data de Nascimento é obrigatório'
                 },
                 {
                     key: 'maritalStatus.chartDescription',
@@ -101,7 +111,9 @@ export function useFormPersonOnlinePage() {
                     key: 'motherName',
                     label: 'Nome da Mãe',
                     cols: 'col-12 col-sm-6 col-md-12',
-                    type: 'text'
+                    type: 'text',
+                    required: true,
+                    requiredMessage: 'Nome da Mãe é obrigatório'
                 },
                 {
                     key: 'fatherName',
@@ -113,20 +125,26 @@ export function useFormPersonOnlinePage() {
                     key: 'nationality',
                     label: 'Nacionalidade',
                     cols: 'col-12 col-sm-6 col-md-4',
-                    type: 'text'
+                    type: 'text',
+                    required: true,
+                    requiredMessage: 'Nacionalidade é obrigatório'
                 },
                 {
                     key: 'naturalPlace',
                     label: 'Naturalidade',
                     cols: 'col-12 col-sm-6 col-md-4',
-                    type: 'text'
+                    type: 'text',
+                    required: true,
+                    requiredMessage: 'Naturalidade é obrigatório'
                 },
                 {
                     key: 'professionalStatus.chartDescription',
                     label: 'Situação Profissional',
                     cols: 'col-12 col-sm-6 col-md-4',
                     type: 'select',
-                    options: []
+                    options: [],
+                    required: (p) => !p?.professionalStatus?.chartDescription?.trim(),
+                    requiredMessage: 'Situação Profissional é obrigatório'
                 },
                 {
                     key: 'profession.description',
@@ -149,7 +167,9 @@ export function useFormPersonOnlinePage() {
                     key: 'income',
                     label: 'Renda Familiar',
                     cols: 'col-12 col-sm-6 col-md-4',
-                    type: 'text'
+                    type: 'text',
+                    required: true,
+                    requiredMessage: 'Renda Familiar é obrigatório'
                 },
                 {
                     key: 'email',
@@ -213,50 +233,80 @@ export function useFormPersonOnlinePage() {
                         { label: 'Sim', value: true },
                         { label: 'Não', value: false }
                     ],
-                    condition: (p) => p?.hasChronicDisease === true
+                    condition: (p) => p?.hasChronicDisease === true,
+                    required: (p) => p?.hasChronicDisease === true,
+                    requiredMessage: 'Doença crônica incapacitante para o trabalho e tem atestado é obrigatório'
                 },
                 {
                     key: 'hasDegenerativeDisease',
-                    label: 'Doença Crônica degenerativa comprovada com laudo médico?',
+                    label: 'Doença crônica degenerativa comprovada com laudo médico?',
                     type: 'radio',
                     cols: 'col-12 col-sm-6 col-md-6',
                     options: [
                         { label: 'Sim', value: true },
                         { label: 'Não', value: false }
                     ],
-                    condition: (p) => p?.hasChronicDisease === true
+                    condition: (p) => p?.hasChronicDisease === true,
+                    required: (p) => p?.hasChronicDisease === true,
+                    requiredMessage: 'Doença crônica degenerativa comprovada com laudo médico é obrigatório'
                 },
                 {
                     key: 'isViolenceVictim',
                     label: 'Mulher vítima de violência',
                     type: 'checkbox',
                     cols: 'col-12 col-sm-6 col-md-4',
-                    condition: (p) => p?.gender === 'F'
+                    condition: (p) => p?.gender === 'F',
+                    required: (p) => p?.gender === 'F',
+                    requiredMessage: 'Mulher vítima de violência é obrigatório'
                 },
                 {
                     key: 'cras',
                     label: 'Acompanhado pelo CRAS',
-                    type: 'checkbox',
-                    cols: 'col-12 col-sm-6 col-md-3'
+                    type: 'radio',
+                    cols: 'col-12 col-sm-6 col-md-3',
+                    required: true,
+                    options: [
+                        { label: 'Sim', value: true },
+                        { label: 'Não', value: false }
+                    ],
+                    requiredMessage: 'Acompanhado pelo CRAS é obrigatório'
                 },
                 {
                     key: 'creas',
                     label: 'Acompanhado pelo CREAS',
-                    type: 'checkbox',
-                    cols: 'col-12 col-sm-6 col-md-3'
+                    type: 'radio',
+                    options: [
+                        { label: 'Sim', value: true },
+                        { label: 'Não', value: false }
+                    ],
+                    cols: 'col-12 col-sm-6 col-md-3',
+                    required: true,
+                    requiredMessage: 'Acompanhado pelo CREAS é obrigatório'
                 },
                 {
                     key: 'hasCancer',
                     label: 'Possui algum tipo de câncer comprovado com laudo médico?',
-                    type: 'checkbox',
-                    cols: 'col-12 col-sm-6 col-md-6'
+                    type: 'radio',
+                    options: [
+                        { label: 'Sim', value: true },
+                        { label: 'Não', value: false }
+                    ],
+                    cols: 'col-12 col-sm-6 col-md-6',
+                    required: true,
+                    requiredMessage: 'Possui algum tipo de câncer comprovado com laudo médico é obrigatório'
                 },
                 {
                     key: 'isSingleParentFamily',
                     label: 'Família é monoparental?',
-                    type: 'checkbox',
+                    type: 'radio',
+                    options: [
+                        { label: 'Sim', value: true },
+                        { label: 'Não', value: false }
+                    ],
                     cols: 'col-12 col-sm-6 col-md-4',
-                    info: 'Família composta por um único responsável (pai ou mãe) e seus filhos'
+                    info: 'Família composta por um único responsável (pai ou mãe) e seus filhos',
+                    required: true,
+                    requiredMessage: 'Família é monoparental é obrigatório'
                 },
                 {
                     key: 'ethnicity',
@@ -269,18 +319,22 @@ export function useFormPersonOnlinePage() {
                         { label: 'AMARELA (ORIENTAIS)', value: 'AMARELA (ORIENTAIS)' },
                         { label: 'NEGRA', value: 'NEGRA' },
                         { label: 'VERMELHA (INDÍGENA)', value: 'VERMELHA (INDÍGENA)' }
-                    ]
+                    ],
+                    required: true,
+                    requiredMessage: 'Etnia é obrigatório'
                 },
                 {
                     key: 'isQuilombola',
-                    label: 'Se for etnia negra a Família é quilombola?',
+                    label: 'Se for etnia negra a família é quilombola?',
                     type: 'radio',
                     cols: 'col-12 col-sm-6 col-md-4',
                     options: [
                         { label: 'Sim', value: true },
                         { label: 'Não', value: false }
                     ],
-                    condition: (p) => p?.ethnicity?.toUpperCase() === 'NEGRA'
+                    condition: (p) => p?.ethnicity?.toUpperCase() === 'NEGRA',
+                    required: (p) => p?.ethnicity?.toUpperCase() === 'NEGRA',
+                    requiredMessage: 'Se for etnia negra a família é quilombola é obrigatório'
                 },
                 {
                     key: 'indigenousEthnicity',
@@ -301,7 +355,9 @@ export function useFormPersonOnlinePage() {
                         { label: 'OUTROS', value: 'OUTROS' }
                     ],
                     cols: 'col-12 col-sm-6 col-md-4',
-                    condition: (p) => p?.ethnicity?.toUpperCase() === 'VERMELHA (INDÍGENA)'
+                    condition: (p) => p?.ethnicity?.toUpperCase() === 'VERMELHA (INDÍGENA)',
+                    required: (p) => p?.ethnicity?.toUpperCase() === 'VERMELHA (INDÍGENA)',
+                    requiredMessage: 'Qual etnia indígena é obrigatório'
                 },
                 {
                     key: 'livesInVillage',
@@ -312,7 +368,9 @@ export function useFormPersonOnlinePage() {
                         { label: 'Sim', value: true },
                         { label: 'Não', value: false }
                     ],
-                    condition: (p) => p?.ethnicity?.toUpperCase() === 'VERMELHA (INDÍGENA)'
+                    condition: (p) => p?.ethnicity?.toUpperCase() === 'VERMELHA (INDÍGENA)',
+                    required: (p) => p?.ethnicity?.toUpperCase() === 'VERMELHA (INDÍGENA)',
+                    requiredMessage: 'Mora em aldeia é obrigatório'
                 }
             ]
         },
@@ -325,33 +383,43 @@ export function useFormPersonOnlinePage() {
                     cols: 'col-12 col-md-4',
                     type: 'text',
                     mask: '###.###.###-##',
-                    disable: true
+                    disable: true,
+                    required: true,
+                    requiredMessage: 'CPF é obrigatório'
                 },
                 {
                     key: 'rg',
                     label: 'RG/CNH',
                     cols: 'col-12 col-md-4',
-                    type: 'text'
+                    type: 'text',
+                    required: true,
+                    requiredMessage: 'RG/CNH é obrigatório'
                 },
                 {
                     key: 'rgIssuer',
                     label: 'Órgão Expedidor',
                     cols: 'col-12 col-md-4',
-                    type: 'text'
+                    type: 'text',
+                    required: true,
+                    requiredMessage: 'Órgão Expedidor é obrigatório'
                 },
                 {
                     key: 'rgState.chartDescription',
                     label: 'UF de Expedição',
                     cols: 'col-12 col-md-4',
                     type: 'select',
-                    options: []
+                    options: [],
+                    required: (p) => !p?.rgState?.chartDescription?.trim(),
+                    requiredMessage: 'UF de Expedição é obrigatório'
                 },
                 {
                     key: 'rgIssueDate',
                     label: 'Data de Expedição',
                     cols: 'col-12 col-md-4',
                     type: 'text',
-                    mask: '##/##/####'
+                    mask: '##/##/####',
+                    required: true,
+                    requiredMessage: 'Data de Expedição é obrigatório'
                 },
                 {
                     key: 'nis',
@@ -501,20 +569,24 @@ export function useFormPersonOnlinePage() {
                 {
                     key: 'spouseHasCancer',
                     label: 'Possui algum tipo de câncer comprovado com laudo médico?',
-                    type: 'checkbox',
+                    type: 'radio',
+                    options: [
+                        { label: 'Sim', value: true },
+                        { label: 'Não', value: false }
+                    ],
                     cols: 'col-12 col-sm-6 col-md-6'
                 },
                 {
                     key: 'spouseIsElderly',
                     label: 'É idoso',
                     type: 'checkbox',
-                    cols: 'col-12 col-sm-6 col-md-2'
+                    cols: 'col-12 col-sm-6 col-md-3'
                 },
                 {
                     key: 'spouseHasChronicDisease',
                     label: 'Tem doença crônica',
                     type: 'checkbox',
-                    cols: 'col-12 col-sm-6 col-md-4'
+                    cols: 'col-12 col-sm-6 col-md-3'
                 },
                 {
                     key: 'spouseHasDisability',
@@ -526,7 +598,7 @@ export function useFormPersonOnlinePage() {
                     key: 'isSpouseDependent',
                     label: 'Dependente do Titular?',
                     type: 'checkbox',
-                    cols: 'col-12 col-md-4'
+                    cols: 'col-12 col-md-3'
                 }
             ]
         },
@@ -538,7 +610,9 @@ export function useFormPersonOnlinePage() {
                     label: 'CEP',
                     cols: 'col-12 col-sm-6 col-md-3',
                     type: 'text',
-                    mask: '#####-###'
+                    mask: '#####-###',
+                    required: true,
+                    requiredMessage: 'CEP é obrigatório'
                 },
                 {
                     key: 'addresses[0].street',
@@ -550,7 +624,9 @@ export function useFormPersonOnlinePage() {
                     key: 'addresses[0].number',
                     label: 'Nº',
                     cols: 'col-12 col-sm-6 col-md-3',
-                    type: 'text'
+                    type: 'text',
+                    required: true,
+                    requiredMessage: 'Nº é obrigatório'
                 },
                 {
                     key: 'addresses[0].complement',
@@ -562,7 +638,9 @@ export function useFormPersonOnlinePage() {
                     key: 'addresses[0].neighborhood',
                     label: 'Bairro',
                     cols: 'col-12 col-sm-6 col-md-6',
-                    type: 'text'
+                    type: 'text',
+                    required: true,
+                    requiredMessage: 'Bairro é obrigatório'
                 },
                 {
                     key: 'addresses[0].region',
@@ -588,7 +666,9 @@ export function useFormPersonOnlinePage() {
                     label: 'Celular',
                     cols: 'col-12 col-sm-6 col-md-4',
                     type: 'text',
-                    mask: '(##) #####-####'
+                    mask: '(##) #####-####',
+                    required: true,
+                    requiredMessage: 'Celular é obrigatório'
                 },
                 {
                     key: 'contactPhone',
@@ -673,14 +753,18 @@ export function useFormPersonOnlinePage() {
                     label: 'Possui algum tipo de câncer comprovado com laudo médico?',
                     type: 'radio',
                     cols: 'col-12 col-sm-6 col-md-6',
-                    options: [{ label: 'Sim', value: true }, { label: 'Não', value: false }]
+                    options: [{ label: 'Sim', value: true }, { label: 'Não', value: false }],
+                    required: true,
+                    requiredMessage: 'Possui algum tipo de câncer comprovado com laudo médico é obrigatório'
                 },
                 {
                     key: 'mainDependent.hasMicrocephaly',
                     label: 'Dependente/Membro Familiar com Microcefalia',
                     type: 'radio',
                     cols: 'col-12 col-sm-6 col-md-6',
-                    options: [{ label: 'Sim', value: true }, { label: 'Não', value: false }]
+                    options: [{ label: 'Sim', value: true }, { label: 'Não', value: false }],
+                    required: true,
+                    requiredMessage: 'Dependente/Membro Familiar com Microcefalia é obrigatório'
                 },
                 {
                     key: 'mainDependent.totalChronicDiseases',
@@ -704,14 +788,18 @@ export function useFormPersonOnlinePage() {
                     label: 'Tipo de Imóvel',
                     cols: 'col-12 col-md-6',
                     type: 'select',
-                    options: []
+                    options: [],
+                    required: (p) => !p?.housingType?.chartDescription?.trim(),
+                    requiredMessage: 'Tipo de Imóvel é obrigatório'
                 },
                 {
                     key: 'housingSituation.chartDescription',
                     label: 'Situação de Moradia',
                     cols: 'col-12 col-md-6',
                     type: 'select',
-                    options: []
+                    options: [],
+                    required: (p) => !p?.housingSituation?.chartDescription?.trim(),
+                    requiredMessage: 'Situação de Moradia é obrigatório'
                 },
                 {
                     key: 'formattedRentValue',
@@ -724,7 +812,9 @@ export function useFormPersonOnlinePage() {
                     label: 'Responsável pela Unidade Familiar',
                     cols: 'col-12 col-md-6',
                     type: 'select',
-                    options: [{ label: 'Homem', value: 'H' }, { label: 'Mulher', value: 'M' }]
+                    options: [{ label: 'Homem', value: 'H' }, { label: 'Mulher', value: 'M' }],
+                    required: true,
+                    requiredMessage: 'Responsável pela Unidade Familiar é obrigatório'
                 },
                 {
                     key: 'residenceTime',
@@ -742,14 +832,20 @@ export function useFormPersonOnlinePage() {
                 {
                     key: 'ownsProperty',
                     label: 'Possui Imóvel',
-                    type: 'checkbox',
-                    cols: 'col-12 col-md-3'
+                    type: 'radio',
+                    cols: 'col-12 col-md-3',
+                    options: [{ label: 'Sim', value: true }, { label: 'Não', value: false }],
+                    required: true,
+                    requiredMessage: 'Possui Imóvel é obrigatório'
                 },
                 {
                     key: 'liveOrWork3KmFromTheDevelopment',
                     label: 'Mora ou Trabalha a 3km do Empreendimento',
-                    type: 'checkbox',
-                    cols: 'col-12 col-md-9'
+                    type: 'radio',
+                    cols: 'col-12 col-md-9',
+                    options: [{ label: 'Sim', value: true }, { label: 'Não', value: false }],
+                    required: true,
+                    requiredMessage: 'Mora ou Trabalha a 3km do Empreendimento é obrigatório'
                 },
                 {
                     key: 'hasPrecariousHousing',
@@ -757,7 +853,9 @@ export function useFormPersonOnlinePage() {
                     type: 'radio',
                     cols: 'col-12 col-sm-6 col-md-12',
                     options: [{ label: 'Sim', value: true }, { label: 'Não', value: false }],
-                    info: 'Mora em casa improvisada ou ainda em construção, sem condições adequadas.'
+                    info: 'Mora em casa improvisada ou ainda em construção, sem condições adequadas.',
+                    required: true,
+                    requiredMessage: 'Vive em habitação precária, caracterizada por domicílio improvisado ou inacabado é obrigatório'
                 },
                 {
                     key: 'isInCoHousing',
@@ -765,7 +863,9 @@ export function useFormPersonOnlinePage() {
                     type: 'radio',
                     cols: 'col-12 col-sm-6 col-md-12',
                     options: [{ label: 'Sim', value: true }, { label: 'Não', value: false }],
-                    info: 'Divide a mesma casa com outra(s) família(s), morando no mesmo domicílio.'
+                    info: 'Divide a mesma casa com outra(s) família(s), morando no mesmo domicílio.',
+                    required: true,
+                    requiredMessage: 'Encontra-se em situação de coabitação, convivendo com outras famílias em um mesmo domicílio é obrigatório'
                 },
                 {
                     key: 'hasOvercrowding',
@@ -773,7 +873,9 @@ export function useFormPersonOnlinePage() {
                     type: 'radio',
                     cols: 'col-12 col-sm-6 col-md-12',
                     options: [{ label: 'Sim', value: true }, { label: 'Não', value: false }],
-                    info: 'Mais de três pessoas morando em cada dormitório do imóvel alugado.'
+                    info: 'Mais de três pessoas morando em cada dormitório do imóvel alugado.',
+                    required: true,
+                    requiredMessage: 'Encontra-se em situação de adensamento excessivo em domicílio alugado, superando a média de três pessoas por dormitório é obrigatório'
                 },
                 {
                     key: 'livesInRiskArea',
@@ -781,7 +883,9 @@ export function useFormPersonOnlinePage() {
                     type: 'radio',
                     cols: 'col-12 col-sm-6 col-md-12',
                     options: [{ label: 'Sim', value: true }, { label: 'Não', value: false }],
-                    info: 'Mora em área com risco de deslizamentos, enchentes ou outras ameaças ambientais.'
+                    info: 'Mora em área com risco de deslizamentos, enchentes ou outras ameaças ambientais.',
+                    required: true,
+                    requiredMessage: 'Residente em área de risco (deslizamento, app, inundações, entre outros) é obrigatório'
                 },
                 {
                     key: 'hasExcessiveRentBurden',
@@ -789,7 +893,9 @@ export function useFormPersonOnlinePage() {
                     type: 'radio',
                     cols: 'col-12 col-sm-6 col-md-12',
                     options: [{ label: 'Sim', value: true }, { label: 'Não', value: false }],
-                    info: 'Compromete mais de 30% da renda mensal apenas com aluguel.'
+                    info: 'Compromete mais de 30% da renda mensal apenas com aluguel.',
+                    required: true,
+                    requiredMessage: 'Encontra-se em situação de ônus excessivo com aluguel, despendendo mais de 30% da renda para pagamento é obrigatório'
                 },
                 {
                     key: 'receivesRentSubsidy',
@@ -797,7 +903,9 @@ export function useFormPersonOnlinePage() {
                     type: 'radio',
                     cols: 'col-12 col-sm-6 col-md-12',
                     options: [{ label: 'Sim', value: true }, { label: 'Não', value: false }],
-                    info: 'Recebe auxílio de programa público de aluguel, como Locação Social ou Recomeçar Moradia.'
+                    info: 'Recebe auxílio de programa público de aluguel, como Locação Social ou Recomeçar Moradia.',
+                    required: true,
+                    requiredMessage: 'É beneficiário de programa de aluguel social provisório? (Programa de Locação Social ou Recomeçar Moradia) é obrigatório'
                 },
                 {
                     key: 'isHomeless',
@@ -805,30 +913,56 @@ export function useFormPersonOnlinePage() {
                     type: 'radio',
                     cols: 'col-12 col-sm-6 col-md-12',
                     options: [{ label: 'Sim', value: true }, { label: 'Não', value: false }],
-                    info: 'Indique se você vive atualmente em situação de rua, ou seja, sem residência fixa ou em condições de vulnerabilidade habitacional.'
+                    info: 'Indique se você vive atualmente em situação de rua, ou seja, sem residência fixa ou em condições de vulnerabilidade habitacional.',
+                    required: true,
+                    requiredMessage: 'Encontra-se em situação de Rua é obrigatório'
                 }
             ]
         },
         {
-            title: 'Empreendimento(s) de Interesse',
+            title: 'Empreendimento(s) de Interesse (máximo 2 tipos)',
             fields: [
                 {
                     key: 'wantsApartment',
                     label: 'Apartamento',
                     type: 'checkbox',
-                    cols: 'col-12 col-md-2'
+                    cols: 'col-12 col-md-2',
+                    condition: (p) => {
+                        const total = [
+                            p?.wantsApartment,
+                            p?.wantsHouse,
+                            p?.wantsLand
+                        ].filter(Boolean).length;
+                        return total < 2 || p?.wantsApartment === true;
+                    }
                 },
                 {
                     key: 'wantsHouse',
                     label: 'Casa',
                     type: 'checkbox',
-                    cols: 'col-12 col-md-2'
+                    cols: 'col-12 col-md-2',
+                    condition: (p) => {
+                        const total = [
+                            p?.wantsApartment,
+                            p?.wantsHouse,
+                            p?.wantsLand
+                        ].filter(Boolean).length;
+                        return total < 2 || p?.wantsHouse === true;
+                    }
                 },
                 {
                     key: 'wantsLand',
                     label: 'Terreno',
                     type: 'checkbox',
-                    cols: 'col-12 col-md-2'
+                    cols: 'col-12 col-md-2',
+                    condition: (p) => {
+                        const total = [
+                            p?.wantsApartment,
+                            p?.wantsHouse,
+                            p?.wantsLand
+                        ].filter(Boolean).length;
+                        return total < 2 || p?.wantsLand === true;
+                    }
                 }
             ]
         },
@@ -893,8 +1027,10 @@ export function useFormPersonOnlinePage() {
 
     const personOnline = ref<PersonOnlineType>(createPersonOnlineForm());
     const validate = ref(false);
+    const validateDependent = ref(false);
     const router = useRouter();
     const eventStore = useEventStore();
+    const loadingInscribe = ref(false);
 
     const isRegister = window.location.hostname.includes("cadastro");
 
@@ -910,6 +1046,57 @@ export function useFormPersonOnlinePage() {
         descriptionOfDisabilities: null,
         hasDegenerativeDisease: null
     });
+
+    async function onCepBlur(cep: string) {
+        if (!cep || cep.length < 8) return;
+
+        try {
+            const address = await fetchAddressByCep(cep);
+
+            if (!personOnline.value.addresses) {
+                personOnline.value.addresses = [];
+            }
+
+            let targetAddress = personOnline.value.addresses[0];
+
+            if (!targetAddress) {
+                targetAddress = {
+                    id: 0,
+                    zipCode: cep,
+                    street: '',
+                    city: '',
+                    region: '',
+                    neighborhood: '',
+                    number: '',
+                    complement: ''
+                };
+                personOnline.value.addresses.push(targetAddress);
+            }
+
+            if (address) {
+                targetAddress.street = address.street;
+                targetAddress.neighborhood = address.neighborhood;
+                targetAddress.city = address.city;
+                targetAddress.region = address.state;
+                targetAddress.zipCode = cep;
+            } else {
+                targetAddress.zipCode = cep;
+            }
+
+        } catch (error) {
+            let errorMessage = 'Erro ao buscar endereço.';
+
+            if (axios.isAxiosError(error) && error.response?.data?.message && error.response.data.code) {
+                errorMessage = error.response.data.message;
+            }
+
+            if (axios.isAxiosError(error) && error.response?.data?.code === 404) {
+                notifyWarning(errorMessage);
+            } else {
+                notifyError(errorMessage);
+            }
+        }
+    }
 
     function openDependentDialog(type: 'chronic' | 'disability') {
         dependentType.value = type;
@@ -930,12 +1117,23 @@ export function useFormPersonOnlinePage() {
 
         if (!mainDependent.value) return;
 
+        validateDependent.value = true;
+
+        if (
+            !dependentForm.value.dependentsWithDisabilitiesNames ||
+            !dependentForm.value.descriptionOfDisabilities ||
+            (dependentType.value === 'chronic' &&
+                dependentForm.value.hasDegenerativeDisease == null)
+        ) {
+            return;
+        }
+
         if (dependentType.value === 'chronic') {
             const chronicCount = personOnline.value.dependents.filter(
                 d => d.dependentsWithDisabilitiesNames && d.descriptionOfDisabilities && d.hasDegenerativeDisease != null
             ).length;
             if (mainDependent.value.totalChronicDiseases != null && chronicCount >= mainDependent.value.totalChronicDiseases) {
-                console.warn('Limite de doenças crônicas atingido');
+                notifyWarning('Limite de doenças crônicas atingido');
                 return;
             }
         }
@@ -945,7 +1143,7 @@ export function useFormPersonOnlinePage() {
                 d => d.dependentsWithDisabilitiesNames && d.descriptionOfDisabilities && d.hasDegenerativeDisease == null
             ).length;
             if (mainDependent.value.totalWithDisability != null && disabilityCount >= mainDependent.value.totalWithDisability) {
-                console.warn('Limite de deficiências atingido');
+                notifyWarning('Limite de deficiências atingido');
                 return;
             }
         }
@@ -975,7 +1173,39 @@ export function useFormPersonOnlinePage() {
         };
 
         personOnline.value.dependents.push(newDep);
+        validateDependent.value = false;
         showDependentDialog.value = false;
+    }
+
+    function validateDependentsCount(): boolean {
+        const dependent = findMainDependent({ dependents: personOnline.value.dependents ?? [] });
+        if (!dependent) return true;
+
+        if (personOnline.value.dependents && dependent.totalChronicDiseases && dependent.totalChronicDiseases > 0) {
+            const chronicDeps = personOnline.value.dependents.filter(
+                d => d.descriptionOfDisabilities != null &&
+                    d.dependentsWithDisabilitiesNames != null &&
+                    d.hasDegenerativeDisease != null
+            );
+            if (chronicDeps.length !== dependent.totalChronicDiseases) {
+                notifyWarning(`Você informou ${dependent.totalChronicDiseases} dependente(s) com doença crônica, mas cadastrou ${chronicDeps.length}.`);
+                return false;
+            }
+        }
+
+        if (personOnline.value.dependents && dependent.totalWithDisability && dependent.totalWithDisability > 0) {
+            const disabilityDeps = personOnline.value.dependents.filter(
+                d => d.descriptionOfDisabilities != null &&
+                    d.dependentsWithDisabilitiesNames != null &&
+                    d.hasDegenerativeDisease == null
+            );
+            if (disabilityDeps.length !== dependent.totalWithDisability) {
+                notifyWarning(`Você informou ${dependent.totalWithDisability} dependente(s) com deficiência, mas cadastrou ${disabilityDeps.length}.`);
+                return false;
+            }
+        }
+
+        return true;
     }
 
     function toYesNo(v: unknown): string {
@@ -989,11 +1219,13 @@ export function useFormPersonOnlinePage() {
 
         if (src == null) {
             if (type === 'number') return null;
-            if (type === 'radio' || type === 'checkbox') return false;
+            if (type === 'radio') return null;
+            if (type === 'checkbox') return false;
             return '';
         }
 
         const value = getMainDependentValue(src, path);
+
         if (value !== undefined) {
             return value;
         }
@@ -1008,7 +1240,8 @@ export function useFormPersonOnlinePage() {
         for (const t of tokens) {
             if (cur == null) {
                 if (type === 'number') return null;
-                if (type === 'radio' || type === 'checkbox') return false;
+                if (type === 'radio') return null;
+                if (type === 'checkbox') return false;
                 return '';
             }
 
@@ -1026,7 +1259,9 @@ export function useFormPersonOnlinePage() {
         }
 
         if (type === 'radio' || type === 'checkbox') {
-            return (cur as boolean) ?? false;
+            if (cur === true || cur === 'true' || cur === 1) return true;
+            if (cur === false || cur === 'false' || cur === 0) return false;
+            return null;
         }
 
         if (type === 'number') {
@@ -1132,15 +1367,15 @@ export function useFormPersonOnlinePage() {
                 personOnline.value.dependents.push(dependent);
             }
 
+            const currentValue = dependent[field] as number | null;
+
             if (
                 (field === 'totalWithDisability' || field === 'totalChronicDiseases') &&
                 typeof value === 'number' &&
                 value !== null
             ) {
-                const oldValue = dependent[field] as number | null;
-
-                if (oldValue != null && value < oldValue) {
-                    const toRemove = oldValue - value;
+                if (currentValue != null && value < currentValue) {
+                    const toRemove = currentValue - value;
 
                     if (field === 'totalWithDisability') {
                         removeDependentsFromList('disability', toRemove);
@@ -1166,44 +1401,78 @@ export function useFormPersonOnlinePage() {
     }
 
     function removeDependentsFromList(listType: 'disability' | 'chronic', count: number) {
-        if (!personOnline.value.dependents) return;
+        if (!personOnline.value.dependents || count <= 0) return;
 
         if (listType === 'disability') {
             const disabilityDeps = personOnline.value.dependents.filter(
-                d => d.descriptionOfDisabilities != null &&
-                    d.dependentsWithDisabilitiesNames != null &&
-                    d.hasDegenerativeDisease == null
+                d =>
+                    d.dependentsWithDisabilitiesNames &&
+                    d.descriptionOfDisabilities &&
+                    (d.hasDegenerativeDisease === null || d.hasDegenerativeDisease === undefined)
             );
-            disabilityDeps.slice(-count).forEach(dep => {
-                const idx = personOnline.value.dependents!.indexOf(dep);
-                if (idx > -1) personOnline.value.dependents!.splice(idx, 1);
-            });
+
+            disabilityDeps
+                .slice()
+                .reverse()
+                .slice(0, count)
+                .forEach(dep => {
+                    const idx = personOnline.value.dependents!.indexOf(dep);
+                    if (idx > -1) personOnline.value.dependents!.splice(idx, 1);
+                });
         }
 
         if (listType === 'chronic') {
             const chronicDeps = personOnline.value.dependents.filter(
-                d => d.dependentsWithDisabilitiesNames != null &&
-                    d.descriptionOfDisabilities != null &&
-                    d.hasDegenerativeDisease != null
+                d =>
+                    d.dependentsWithDisabilitiesNames &&
+                    d.descriptionOfDisabilities &&
+                    d.hasDegenerativeDisease !== null &&
+                    d.hasDegenerativeDisease !== undefined
             );
-            chronicDeps.slice(-count).forEach(dep => {
-                const idx = personOnline.value.dependents!.indexOf(dep);
-                if (idx > -1) personOnline.value.dependents!.splice(idx, 1);
-            });
+
+            chronicDeps
+                .slice()
+                .reverse()
+                .slice(0, count)
+                .forEach(dep => {
+                    const idx = personOnline.value.dependents!.indexOf(dep);
+                    if (idx > -1) personOnline.value.dependents!.splice(idx, 1);
+                });
         }
     }
 
     function getRaw(path: string): unknown {
+        if (path.startsWith('mainDependent.')) {
+            const main = findMainDependent({ dependents: personOnline.value?.dependents ?? [] });
+            if (!main) return null;
+
+            const subPath = path.slice('mainDependent.'.length);
+            return getByPath(main, subPath);
+        }
+
+        return getByPath(personOnline.value, path);
+    }
+
+    function getByPath(root: unknown, path: string): unknown {
         const tokens = path
             .replace(/\[(\w+)\]/g, '.$1')
             .replace(/^\./, '')
             .split('.');
 
-        let cur: unknown = personOnline.value;
+        let cur: unknown = root;
 
         for (const t of tokens) {
             if (cur == null) return null;
-            if (t === 'length' && Array.isArray(cur)) return cur.length;
+
+            if (t === 'length' && Array.isArray(cur)) {
+                return cur.length;
+            }
+
+            if (/^\d+$/.test(t) && Array.isArray(cur)) {
+                cur = cur[Number(t)];
+                continue;
+            }
+
             if (typeof cur === 'object' && cur !== null && t in (cur as Record<string, unknown>)) {
                 cur = (cur as Record<string, unknown>)[t];
             } else {
@@ -1214,16 +1483,19 @@ export function useFormPersonOnlinePage() {
     }
 
     function isEmptyValue(v: unknown, type: FieldKind): boolean {
-        if (type === 'number')
-            return v === null || v === undefined || (typeof v === 'number' && Number.isNaN(v));
-
-        if (type === 'select')
-            return v === null || v === undefined || v === '';
-
-        if (type === 'date')
-            return typeof v !== 'string' || v.trim() === '';
-
-        return typeof v !== 'string' || v.trim() === '';
+        switch (type) {
+            case 'number':
+                return v === null || v === undefined || (typeof v === 'number' && Number.isNaN(v));
+            case 'select':
+                return v === null || v === undefined || v === '';
+            case 'date':
+                return typeof v !== 'string' || v.trim() === '';
+            case 'radio':
+            case 'checkbox':
+                return v === null || v === undefined;
+            default:
+                return typeof v !== 'string' || v.trim() === '';
+        }
     }
 
     function isFieldRequired(field: FieldDef): boolean {
@@ -1237,6 +1509,14 @@ export function useFormPersonOnlinePage() {
         if (!evalCond(field, personOnline.value)) return false;
 
         const raw = getRaw(field.key);
+
+        if (field.key.toLowerCase().includes('dependent')) {
+            console.log(field.key);
+
+            console.log(raw);
+
+        }
+
         return isEmptyValue(raw, field.type);
     }
 
@@ -1339,18 +1619,19 @@ export function useFormPersonOnlinePage() {
         }
     });
 
-    function isEmpty(value: unknown): boolean {
-        return value === null || value === undefined || value === '' ||
-            (typeof value === 'number' && Number.isNaN(value));
-    }
-
     function validateRequiredFields(): string | null {
-        const requiredFields = personOnlineFieldSections.value
-            .flatMap(section => section.fields.filter(f => f.required));
+        const requiredVisibleFields = personOnlineFieldSections.value
+            .flatMap(section =>
+                section.fields.filter(f =>
+                    evalCond(f, personOnline.value) &&
+                    isFieldRequired(f) &&
+                    !f.disable
+                )
+            );
 
-        for (const field of requiredFields) {
+        for (const field of requiredVisibleFields) {
             const value = getPersonOnlineValue(field.key, field.type);
-            if (isEmpty(value)) {
+            if (isEmptyValue(value, field.type)) {
                 return field.key;
             }
         }
@@ -1367,14 +1648,76 @@ export function useFormPersonOnlinePage() {
 
     async function onSubmit() {
         validate.value = true;
+
         const firstInvalidKey = validateRequiredFields();
+
+        console.log(firstInvalidKey);
+
 
         if (firstInvalidKey) {
             await nextTick(() => scrollToField(firstInvalidKey));
             return;
         }
 
-        console.log('Form válido', personOnline.value);
+        if (!validateDependentsCount()) return;
+
+        await Promise.all([
+            proccess(),
+            sleep(1000)
+        ]);
+
+        loadingInscribe.value = false;
+    }
+
+    async function proccess(): Promise<void> {
+        loadingInscribe.value = true;
+        const inscriptionStore = useInscriptionStore();
+
+        try {
+
+            normalizePersonFields(personOnline.value);
+            cleanupBadKeys(personOnline.value as unknown as Record<string, unknown>);
+
+            if (!isRegister) {
+                const newInscription: InscriptionType = {
+                    id: inscriptionStore.selectedInscription?.id ?? null,
+                    personOnline: personOnline.value,
+                    eventComponent: eventStore.selectedEventComponent,
+                    registrationProtocol: '',
+                    changeUser: personOnline.value.name,
+                    active: true,
+                    updatedAt: new Date()
+                };
+
+                if (!newInscription.id) {
+                    const created = await createInscription(newInscription);
+                    inscriptionStore.setSelectedInscription(created);
+                } else {
+                    await updateInscription(newInscription);
+                }
+            } else {
+                if (!personOnline.value.id) {
+                    const created = await createPersonOnline(personOnline.value);
+                    personOnlineStore.setSelectedPersonOnline(created);
+                } else {
+                    await updatePersonOnline(personOnline.value);
+                }
+            }
+
+            await router.push(isRegister ? '/cadastro-concluido' : '/inscricao-concluida');
+
+        } catch (error) {
+            let errorMessage = 'Erro ao processar.';
+
+            if (axios.isAxiosError(error) && error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            }
+
+            console.error('Erro ao processar:', error);
+            notifyError(errorMessage);
+        } finally {
+            loadingInscribe.value = false;
+        }
     }
 
     async function onBack() {
@@ -1386,7 +1729,45 @@ export function useFormPersonOnlinePage() {
         return !field.condition || field.condition(person);
     }
 
+    function sleep(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function removeNonDigits(value: string | null | undefined): string {
+        if (!value) return '';
+        return value.replace(/\D+/g, '');
+    }
+
+    function normalizePersonFields(p: PersonOnlineType) {
+        p.birthDate = toBRDate(p.birthDate);
+        p.rgIssueDate = toBRDate(p.rgIssueDate);
+        p.spouseBirthDate = toBRDate(p.spouseBirthDate);
+
+        p.cpf = removeNonDigits(p.cpf);
+        p.nis = removeNonDigits(p.nis);
+        p.rg = removeNonDigits(p.rg);
+        p.spouseCpf = removeNonDigits(p.spouseCpf);
+
+        if (p.phone) {
+            p.phone = removeNonDigits(p.phone);
+        }
+        if (p.mobile) {
+            p.mobile = removeNonDigits(p.mobile);
+        }
+
+        if (Array.isArray(p.addresses) && p.addresses.length > 0) {
+            p.addresses[0]!.zipCode = removeNonDigits(p.addresses[0]!.zipCode);
+        }
+    }
+
+    function cleanupBadKeys(p: Record<string, unknown>) {
+        if ('addresses[0]' in p) {
+            delete p['addresses[0]'];
+        }
+    }
+
     return {
+        loadingInscribe,
         personOnline,
         onSubmit,
         onBack,
@@ -1413,6 +1794,9 @@ export function useFormPersonOnlinePage() {
         dependentForm,
         showDependentDialog,
         dependentType,
-        saveDependent
+        saveDependent,
+        validateDependent,
+        onCepBlur,
+        isFieldRequired
     };
 }

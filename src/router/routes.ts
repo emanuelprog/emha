@@ -64,6 +64,28 @@ const routes: RouteRecordRaw[] = [
           requiresRegisterTermRequirement: true,
           requiresRegisterTermAccepted: true
         }
+      },
+      {
+        path: 'inscricao-concluida',
+        component: () => import('pages/CompletedForm/CompletedFormPage.vue'),
+        meta: {
+          requiresAuth: true,
+          validationType: 'event',
+          requiresEventTerm: true,
+          requiresEventTermAccepted: true,
+          requiresEventComponent: true
+        }
+      },
+      {
+        path: 'cadastro-concluido',
+        component: () => import('pages/CompletedForm/CompletedFormPage.vue'),
+        meta: {
+          requiresAuth: true,
+          validationType: 'register',
+          requiresRegisterTermDocument: true,
+          requiresRegisterTermRequirement: true,
+          requiresRegisterTermAccepted: true
+        }
       }
     ],
   },

@@ -68,6 +68,8 @@ import ConfigModal from 'src/components/ConfigModal.vue'
 import keycloak from 'src/services/keycloakService'
 import { useTermStore } from 'src/stores/termStore'
 import { useEventStore } from 'src/stores/eventStore'
+import { useInscriptionStore } from 'src/stores/inscriptionStore'
+import { usePersonOnlineStore } from 'src/stores/personOnlineStore'
 
 const $q = useQuasar()
 const router = useRouter()
@@ -77,6 +79,8 @@ const userName = computed(() => keycloak.tokenParsed?.name + ' ' + keycloak.toke
 
 const termStore = useTermStore();
 const eventStore = useEventStore();
+const inscriptionStore = useInscriptionStore();
+const personOnlineStore = usePersonOnlineStore();
 
 const navItems = [
   { label: '', route: 'inicio', icon: 'home' },
@@ -114,6 +118,8 @@ function logout() {
       sessionStorage.clear()
       termStore.clear()
       eventStore.clear()
+      inscriptionStore.clear()
+      personOnlineStore.clear()
       void keycloak.logout({ redirectUri: window.location.origin + '/inicio' })
     }
   }, 1000)

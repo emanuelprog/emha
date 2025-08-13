@@ -226,32 +226,52 @@ const personOnlineFieldSections = ref<FieldSection[]>([
             {
                 key: 'isViolenceVictim',
                 label: 'Mulher vítima de violência',
-                type: 'checkbox',
+                type: 'radio',
+                options: [
+                    { label: 'Sim', value: true },
+                    { label: 'Não', value: false }
+                ],
                 cols: 'col-12 col-sm-6 col-md-4',
                 condition: (p) => p?.gender === 'F'
             },
             {
                 key: 'cras',
                 label: 'Acompanhado pelo CRAS',
-                type: 'checkbox',
+                type: 'radio',
+                options: [
+                    { label: 'Sim', value: true },
+                    { label: 'Não', value: false }
+                ],
                 cols: 'col-12 col-sm-6 col-md-3'
             },
             {
                 key: 'creas',
                 label: 'Acompanhado pelo CREAS',
-                type: 'checkbox',
+                type: 'radio',
+                options: [
+                    { label: 'Sim', value: true },
+                    { label: 'Não', value: false }
+                ],
                 cols: 'col-12 col-sm-6 col-md-3'
             },
             {
                 key: 'hasCancer',
                 label: 'Possui algum tipo de câncer comprovado com laudo médico?',
-                type: 'checkbox',
+                type: 'radio',
+                options: [
+                    { label: 'Sim', value: true },
+                    { label: 'Não', value: false }
+                ],
                 cols: 'col-12 col-sm-6 col-md-6'
             },
             {
                 key: 'isSingleParentFamily',
                 label: 'Família é monoparental?',
-                type: 'checkbox',
+                type: 'radio',
+                options: [
+                    { label: 'Sim', value: true },
+                    { label: 'Não', value: false }
+                ],
                 cols: 'col-12 col-sm-6 col-md-4',
                 info: 'Família composta por um único responsável (pai ou mãe) e seus filhos'
             },
@@ -497,7 +517,11 @@ const personOnlineFieldSections = ref<FieldSection[]>([
             {
                 key: 'spouseHasCancer',
                 label: 'Possui algum tipo de câncer comprovado com laudo médico?',
-                type: 'checkbox',
+                type: 'radio',
+                options: [
+                    { label: 'Sim', value: true },
+                    { label: 'Não', value: false }
+                ],
                 cols: 'col-12 col-sm-6 col-md-6'
             },
             {
@@ -855,7 +879,7 @@ const personOnlineFieldSections = ref<FieldSection[]>([
 
 const columns: QTableColumn<InscriptionType>[] = [
     { name: 'eventComponent.description', label: 'Evento', field: row => row.eventComponent?.description, align: 'left', sortable: true },
-    { name: 'updatedAt', label: 'Data da Inscrição', field: row => formatDate(row.updatedAt), align: 'left', sortable: true },
+    { name: 'updatedAt', label: 'Data da Inscrição', field: row => formatDate(row.updatedAt!), align: 'left', sortable: true },
     {
         name: 'actions',
         label: 'Imprimir',

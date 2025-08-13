@@ -1,5 +1,5 @@
 import { api } from 'boot/axios';
-import type { PersonOnlineFilter } from 'src/types/personOnlineType';
+import type { PersonOnlineFilter, PersonOnlineType } from 'src/types/personOnlineType';
 
 export async function fetchRegistered(filter: PersonOnlineFilter, page = 0, size = 10) {
     const response = await api.post(`/person-online/registered?page=${page}&size=${size}`, filter);
@@ -15,5 +15,15 @@ export async function fetchPersonOnlineByFilters(filter: PersonOnlineFilter) {
 export async function fetchSpouse(filter: PersonOnlineFilter) {
     const response = await api.post('/person-online/spouse', filter);
 
+    return response.data.obj;
+}
+
+export async function createPersonOnline(personOnline: PersonOnlineType) {
+    const response = await api.post('/person-online', personOnline);
+    return response.data.obj;
+}
+
+export async function updatePersonOnline(personOnline: PersonOnlineType) {
+    const response = await api.put(`/person-online/${personOnline.id}`, personOnline);
     return response.data.obj;
 }

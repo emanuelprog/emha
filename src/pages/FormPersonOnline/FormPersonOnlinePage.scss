@@ -12,3 +12,18 @@
     background-color: #2a2a2a;
     color: #fff;
   }
+
+  .required-label .q-field__label::after {
+    content: " *";
+    color: red;
+  }
+
+  .required-label-radio::after {
+    content: " *";
+    color: red;
+  }
+  
+  .required-label-checkbox .q-checkbox__label::after {
+    content: " *";
+    color: red;
+  }

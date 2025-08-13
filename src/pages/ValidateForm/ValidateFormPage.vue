@@ -13,14 +13,14 @@
             <div v-if="personOnline && !showUserValidate && !loading" flat bordered
                 style="max-width: 1100px; width: 100%;">
                 <div class="row q-col-gutter-md">
-                    <q-input v-model="personOnline.cpf" label="* CPF" mask="###.###.###-##" filled
+                    <q-input v-model="personOnline.cpf" label="CPF" mask="###.###.###-##" filled
                         class="col-12 col-sm-6 col-md-3" :error="validate && !personOnline.cpf"
                         error-message="Campo obrigatório" disable />
 
-                    <q-input v-model="personOnline.name" label="* Nome Completo" filled class="col-12 col-sm-6 col-md-6"
+                    <q-input v-model="personOnline.name" label="Nome Completo" filled class="col-12 col-sm-6 col-md-6"
                         :error="validate && !personOnline.name" error-message="Campo obrigatório" disable />
 
-                    <q-input v-model="personOnline.birthDate" label="* Data de Nascimento" mask="##/##/####" filled
+                    <q-input v-model="personOnline.birthDate" label="Data de Nascimento" mask="##/##/####" filled
                         class="col-12 col-sm-6 col-md-3" :error="validate && !personOnline.birthDate"
                         error-message="Campo obrigatório" :disable="isBirthDateDisabled">
                         <template v-slot:append>
