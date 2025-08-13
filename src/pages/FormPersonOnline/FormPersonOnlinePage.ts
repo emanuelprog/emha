@@ -5,7 +5,7 @@ import { notifyWarning } from 'src/services/messageService';
 import { fetchProfessions } from 'src/services/professionService';
 import { useEventStore } from 'src/stores/eventStore';
 import { usePersonOnlineStore } from 'src/stores/personOnlineStore';
-import type { DependentType } from 'src/types/dependentType';
+import { createDefaultDependent, type DependentType } from 'src/types/dependentType';
 import { createPersonOnlineForm, type PersonOnlineType } from 'src/types/personOnlineType';
 import { formatDate } from 'src/util/dateUtil';
 import { formatCurrencyBRL } from 'src/util/formatUtil';
@@ -1044,20 +1044,47 @@ export function useFormPersonOnlinePage() {
         return null;
     }
 
-    function setPersonOnlineValue(path: string, value: unknown) {
-        const keys = path.split('.');
+    function setPersonOnlineValue<K extends keyof DependentType>(
+        path: string,
+        value: DependentType[K] | null
+    ) {
+        if (typeof value === 'string' && value.trim() === '') {
+            value = null as DependentType[K];
+        }
 
+        if (path.startsWith('mainDependent.')) {
+            const field = path.replace('mainDependent.', '') as K;
+
+            let dependent = personOnline.value.dependents?.find(
+                dp => dp.descriptionOfDisabilities == null && dp.dependentsWithDisabilitiesNames == null
+            );
+
+            if (!dependent) {
+                if (!personOnline.value.dependents) {
+                    personOnline.value.dependents = [];
+                }
+                dependent = createDefaultDependent();
+
+                dependent[field] = value as DependentType[K];
+
+                personOnline.value.dependents.push(dependent);
+            } else {
+                dependent[field] = value as DependentType[K];
+            }
+        }
+
+        const keys = path.split('.');
         const root = personOnline.value as unknown as Record<string, unknown>;
 
         keys.slice(0, -1).reduce((acc, key) => {
-            if (
-                typeof acc[key] !== 'object' ||
-                acc[key] === null
-            ) {
+            if (typeof acc[key] !== 'object' || acc[key] === null) {
                 acc[key] = {};
             }
             return acc[key] as Record<string, unknown>;
         }, root)[keys[keys.length - 1]!] = value;
+
+        console.log(personOnline.value);
+
     }
 
     function getRaw(path: string): unknown {

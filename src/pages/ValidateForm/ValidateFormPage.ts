@@ -36,6 +36,7 @@ export function useValidateFormPage() {
     const eventStore = useEventStore();
     const personOnlineStore = usePersonOnlineStore();
 
+    const loading = ref(false);
     const showUserValidate = ref(false);
     const isBirthDateDisabled = ref(false);
     const isBirthDateValidated = ref(false);
@@ -43,6 +44,8 @@ export function useValidateFormPage() {
 
     async function loadPersonOnline() {
         try {
+            loading.value = true;
+
             const [personOnlineRes] = await Promise.all([
                 fetchPersonOnlineByFilters(
                     {
@@ -50,7 +53,8 @@ export function useValidateFormPage() {
                         cpf: keycloak.tokenParsed?.cpf ? formatCpfForSearch(keycloak.tokenParsed?.cpf) : keycloak.tokenParsed?.cpf,
                         registrationPassword: ''
                     }
-                )
+                ),
+                sleep(1000)
             ]);
 
             personOnline.value = personOnlineRes;
@@ -64,6 +68,8 @@ export function useValidateFormPage() {
             } else {
                 isBirthDateDisabled.value = false;
             }
+
+            loading.value = false;
         } catch (error) {
             let errorMessage = 'Erro ao buscar cadastro.';
 
@@ -81,16 +87,20 @@ export function useValidateFormPage() {
             }
 
             isBirthDateDisabled.value = false;
+            loading.value = false;
         }
     }
 
     async function onSubmit() {
         validate.value = true;
-        if (personOnline.value.cpf && personOnline.value.name && personOnline.value.birthDate) {
-            console.log('Form válido', personOnline.value);
+        loading.value = true;
 
+        await sleep(1500);
+
+        if (personOnline.value.cpf && personOnline.value.name && personOnline.value.birthDate) {
             if (!personOnline.value.caponl && isUnder18(personOnline.value.birthDate) && !isBirthDateValidated.value) {
                 showUserValidate.value = true;
+                loading.value = false;
                 return;
             }
 
@@ -102,6 +112,7 @@ export function useValidateFormPage() {
                 await verifyEvent();
             }
 
+            loading.value = false;
             personOnlineStore.setSelectedPersonOnline(personOnline.value);
 
             await router.push(isRegister ? '/formulario-cadastro' : '/formulario-evento');
@@ -115,10 +126,14 @@ export function useValidateFormPage() {
 
     async function onValidate() {
         try {
+
+            loading.value = true;
             const [userRes] = await Promise.all([
-                fetchUser(form.value.username, form.value.password)
+                fetchUser(form.value.username, form.value.password),
+                sleep(1000)
             ]);
 
+            loading.value = false;
             isBirthDateValidated.value = userRes;
             showUserValidate.value = false;
         } catch (error) {
@@ -134,6 +149,8 @@ export function useValidateFormPage() {
             } else {
                 notifyError(errorMessage);
             }
+
+            loading.value = false;
         }
     }
 
@@ -143,6 +160,10 @@ export function useValidateFormPage() {
 
     async function verifyEvent() {
         if (!eventStore.selectedEventComponent?.id) return;
+
+        loading.value = true;
+
+        await sleep(1500);
 
         try {
             await fetchInscriptionsBySpouseAndEventComponent({
@@ -156,6 +177,8 @@ export function useValidateFormPage() {
                 cpf: keycloak.tokenParsed?.cpf ? formatCpfForSearch(keycloak.tokenParsed?.cpf) : keycloak.tokenParsed?.cpf,
                 registrationPassword: ''
             });
+
+            loading.value = false;
         } catch (error: unknown) {
             if (axios.isAxiosError(error) && error.response?.data?.message && error.response.data.code) {
                 const isDuplicate = ALREADY_EXISTS_CODES.includes(error.response.data.code);
@@ -167,10 +190,16 @@ export function useValidateFormPage() {
             } else {
                 notifyError('Erro desconhecido.');
             }
+
+            loading.value = false;
         }
     }
 
     async function verifySpouseRegister() {
+        loading.value = true;
+
+        await sleep(1500);
+
         try {
             await fetchSpouse(
                 {
@@ -178,6 +207,8 @@ export function useValidateFormPage() {
                     cpf: keycloak.tokenParsed?.cpf ? formatCpfForSearch(keycloak.tokenParsed?.cpf) : keycloak.tokenParsed?.cpf,
                     registrationPassword: ''
                 });
+
+            loading.value = false;
         } catch (error: unknown) {
             if (axios.isAxiosError(error) && error.response?.data?.message && error.response.data.code) {
                 const isDuplicate = ALREADY_EXISTS_CODES.includes(error.response.data.code);
@@ -189,6 +220,7 @@ export function useValidateFormPage() {
             } else {
                 notifyError('Erro desconhecido.');
             }
+            loading.value = false;
         }
     }
 
@@ -196,7 +228,12 @@ export function useValidateFormPage() {
         showPassword.value = !showPassword.value
     }
 
+    function sleep(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     return {
+        loading,
         personOnline,
         form,
         validate,

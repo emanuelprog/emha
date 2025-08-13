@@ -6,7 +6,12 @@
             <div class="text-h6 q-mt-sm q-mb-md">{{ showUserValidate ? 'Validar Emancipação' : 'Informações Pessoais' }}
             </div>
 
-            <div v-if="personOnline && !showUserValidate" flat bordered style="max-width: 1100px; width: 100%;">
+            <div v-if="loading" class="row justify-center q-my-md">
+                <q-spinner color="primary" size="40px" />
+            </div>
+
+            <div v-if="personOnline && !showUserValidate && !loading" flat bordered
+                style="max-width: 1100px; width: 100%;">
                 <div class="row q-col-gutter-md">
                     <q-input v-model="personOnline.cpf" label="* CPF" mask="###.###.###-##" filled
                         class="col-12 col-sm-6 col-md-3" :error="validate && !personOnline.cpf"
@@ -32,14 +37,14 @@
                 <q-separator class="q-mt-md" />
 
                 <q-card-actions align="between" class="q-pa-md">
-                    <q-btn label="Voltar" color="grey-7" flat @click="onBack" />
+                    <q-btn label="Voltar" color="grey-7" flat @click="onBack" :disable="loading" />
                     <div class="row items-center q-gutter-sm">
-                        <q-btn label="Avançar" color="primary" @click="onSubmit" />
+                        <q-btn label="Avançar" color="primary" @click="onSubmit" :disable="loading" />
                     </div>
                 </q-card-actions>
             </div>
 
-            <div v-if="showUserValidate" class="column items-center q-mb-md">
+            <div v-if="showUserValidate && !loading" class="column items-center q-mb-md">
                 <div class="text-negative text-center text-bold">
                     Procure a emha para realização do seu cadastro, caso você seja Emancipado.
                 </div>
@@ -49,7 +54,7 @@
                 </a>
             </div>
 
-            <div v-if="showUserValidate" flat bordered style="max-width: 300px; width: 100%;">
+            <div v-if="showUserValidate && !loading" flat bordered style="max-width: 300px; width: 100%;">
                 <div class="row q-col-gutter-md justify-center">
                     <q-input v-model.text="form.username" label="Usuário" type="text" filled
                         :error="validate && form.username === ''" error-message="Campo obrigatório"
@@ -66,8 +71,8 @@
                 </div>
 
                 <div class="row q-gutter-md justify-center q-my-lg">
-                    <q-btn label="Voltar" flat color="grey-7" @click="onBackValidate" />
-                    <q-btn label="Validar" color="primary" @click="onValidate" />
+                    <q-btn label="Voltar" flat color="grey-7" @click="onBackValidate" :disable="loading" />
+                    <q-btn label="Validar" color="primary" @click="onValidate" :disable="loading" />
                 </div>
             </div>
         </div>
@@ -81,6 +86,7 @@ import './ValidateFormPage.scss';
 import lottie from 'lottie-web';
 
 const {
+    loading,
     personOnline,
     form,
     validate,

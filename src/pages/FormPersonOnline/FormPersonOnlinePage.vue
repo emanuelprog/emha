@@ -18,7 +18,7 @@
                             <div class="row q-col-gutter-md">
                                 <template v-for="(field, index) in section.fields" :key="index">
                                     <q-input
-                                        v-if="field.type === 'text' && field.key !== 'income' && evalCond(field, personOnline)"
+                                        v-if="field.type === 'text' && field.key !== 'income' && field.key !== 'formattedRentValue' && evalCond(field, personOnline)"
                                         type="text" :label="field.label" :mask="field.mask" :title="field.label"
                                         :model-value="getPersonOnlineString(field.key)" filled :disable="field.disable"
                                         @update:model-value="setPersonOnlineValue(field.key, $event)"
@@ -28,12 +28,13 @@
                                     <q-input v-if="field.type === 'number' && evalCond(field, personOnline)"
                                         type="number" :label="field.label" :mask="field.mask" :title="field.label"
                                         :model-value="getPersonOnlineNumber(field.key)" filled :disable="field.disable"
-                                        @update:model-value="setPersonOnlineValue(field.key, $event)"
+                                        @update:model-value="setPersonOnlineValue(field.key, $event !== '' ? Number($event) : null)"
                                         :data-key="field.key" :error="hasError(field)"
                                         :error-message="getErrorMessage(field)" :class="field.cols" />
 
-                                    <q-input v-if="field.key === 'income' && evalCond(field, personOnline)"
-                                        :label="field.label" v-model="incomeModel" inputmode="numeric" filled
+                                    <q-input
+                                        v-if="field.key === 'income' || field.key === 'formattedRentValue' && evalCond(field, personOnline)"
+                                        :label="field.label" v-model.number="incomeModel" inputmode="numeric" filled
                                         :data-key="field.key" :disable="field.disable" :class="field.cols" />
 
                                     <q-select v-if="field.type === 'select' && evalCond(field, personOnline)"
@@ -103,14 +104,16 @@
                         <div v-if="section.title === 'Dependentes'" class="row q-col-gutter-md q-mt-md"
                             style="width: 100%;">
 
-                            <div class="col-12 col-md-6">
+                            <div v-if="personOnline.dependents?.find(dp => dp.descriptionOfDisabilities == null && dp.dependentsWithDisabilitiesNames == null)?.totalWithDisability != null"
+                                class="col-12 col-md-6">
                                 <div class="text-subtitle2 text-weight-medium q-mb-sm">Doença Crônica</div>
                                 <q-table flat dense square separator="cell" :rows="chronicDiseaseRows"
                                     :table-class="$q.dark.isActive ? 'table-dark' : 'table-light'"
                                     :columns="chronicColumns" row-key="__key" hide-bottom style="width: 100%;" />
                             </div>
 
-                            <div class="col-12 col-md-6">
+                            <div v-if="personOnline.dependents?.find(dp => dp.descriptionOfDisabilities == null && dp.dependentsWithDisabilitiesNames == null)?.totalChronicDiseases != null"
+                                class="col-12 col-md-6">
                                 <div class="text-subtitle2 text-weight-medium q-mb-sm">Deficiência</div>
                                 <q-table flat dense square separator="cell" :rows="disabilityRows"
                                     :table-class="$q.dark.isActive ? 'table-dark' : 'table-light'"
