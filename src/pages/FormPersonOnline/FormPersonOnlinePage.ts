@@ -683,17 +683,17 @@ export function useFormPersonOnlinePage() {
                     options: [{ label: 'Sim', value: true }, { label: 'Não', value: false }]
                 },
                 {
+                    key: 'mainDependent.totalChronicDiseases',
+                    label: 'Número de Dependentes com Doença Crônica',
+                    type: 'number',
+                    cols: 'col-12 col-sm-6 col-md-6'
+                },
+                {
                     key: 'mainDependent.totalWithDisability',
                     label: 'Número de Dependentes com Deficiência',
                     type: 'number',
                     cols: 'col-12 col-sm-6 col-md-6'
                 },
-                {
-                    key: 'mainDependent.totalChronicDiseases',
-                    label: 'Número de Dependentes com Doença Crônica',
-                    type: 'number',
-                    cols: 'col-12 col-sm-6 col-md-6'
-                }
             ]
         },
         {
@@ -898,6 +898,86 @@ export function useFormPersonOnlinePage() {
 
     const isRegister = window.location.hostname.includes("cadastro");
 
+    const mainDependent = computed(() =>
+        findMainDependent({ dependents: personOnline.value.dependents })
+    );
+
+    const showDependentDialog = ref(false);
+    const dependentType = ref<'chronic' | 'disability'>('chronic');
+
+    const dependentForm = ref<Partial<DependentType>>({
+        dependentsWithDisabilitiesNames: null,
+        descriptionOfDisabilities: null,
+        hasDegenerativeDisease: null
+    });
+
+    function openDependentDialog(type: 'chronic' | 'disability') {
+        dependentType.value = type;
+        dependentForm.value = {
+            dependentsWithDisabilitiesNames: null,
+            descriptionOfDisabilities: null,
+            hasDegenerativeDisease: null
+        };
+        showDependentDialog.value = true;
+    }
+
+    function saveDependent() {
+        if (!personOnline.value) return;
+
+        if (!personOnline.value.dependents) {
+            personOnline.value.dependents = [];
+        }
+
+        if (!mainDependent.value) return;
+
+        if (dependentType.value === 'chronic') {
+            const chronicCount = personOnline.value.dependents.filter(
+                d => d.dependentsWithDisabilitiesNames && d.descriptionOfDisabilities && d.hasDegenerativeDisease != null
+            ).length;
+            if (mainDependent.value.totalChronicDiseases != null && chronicCount >= mainDependent.value.totalChronicDiseases) {
+                console.warn('Limite de doenças crônicas atingido');
+                return;
+            }
+        }
+
+        if (dependentType.value === 'disability') {
+            const disabilityCount = personOnline.value.dependents.filter(
+                d => d.dependentsWithDisabilitiesNames && d.descriptionOfDisabilities && d.hasDegenerativeDisease == null
+            ).length;
+            if (mainDependent.value.totalWithDisability != null && disabilityCount >= mainDependent.value.totalWithDisability) {
+                console.warn('Limite de deficiências atingido');
+                return;
+            }
+        }
+        const newDep: DependentType = {
+            id: null,
+            totalDependents: null,
+            under14: null,
+            over60: null,
+            totalWithDisability: null,
+            hasWheelchairDependent: null,
+            hasMotorDisability: null,
+            hasPhysicalDisability: null,
+            hasHearingDisability: null,
+            hasVisualDisability: null,
+            hasMultipleDisabilities: null,
+            hasOtherDisabilities: null,
+            descriptionOfDisabilities: dependentForm.value.descriptionOfDisabilities ?? null,
+            dependentsWithDisabilitiesNames: dependentForm.value.dependentsWithDisabilitiesNames ?? null,
+            totalChronicDiseases: null,
+            hasMentalDisability: null,
+            hasMicrocephaly: null,
+            hasDisablingChronicDisease: null,
+            hasCancer: null,
+            hasDegenerativeDisease: dependentType.value === 'chronic'
+                ? dependentForm.value.hasDegenerativeDisease ?? null
+                : null
+        };
+
+        personOnline.value.dependents.push(newDep);
+        showDependentDialog.value = false;
+    }
+
     function toYesNo(v: unknown): string {
         if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
         if (typeof v === 'string') return v.toUpperCase() === 'S' ? 'Sim' : 'Não';
@@ -913,48 +993,9 @@ export function useFormPersonOnlinePage() {
             return '';
         }
 
-
-        if (path.startsWith('mainDependent.')) {
-            const { dependents = [] } = (src as { dependents?: DependentType[] });
-
-            const mainDependent = dependents.find(dp => dp.descriptionOfDisabilities == null && dp.dependentsWithDisabilitiesNames == null);
-
-            if (mainDependent) {
-                switch (path) {
-                    case 'mainDependent.totalDependents':
-                        return mainDependent.totalDependents;
-                    case 'mainDependent.under14':
-                        return mainDependent.under14;
-                    case 'mainDependent.over60':
-                        return mainDependent.over60;
-                    case 'mainDependent.hasWheelchairDependent':
-                        return mainDependent.hasWheelchairDependent;
-                    case 'mainDependent.hasMotorDisability':
-                        return mainDependent.hasMotorDisability;
-                    case 'mainDependent.hasPhysicalDisability':
-                        return mainDependent.hasPhysicalDisability;
-                    case 'mainDependent.hasHearingDisability':
-                        return mainDependent.hasHearingDisability;
-                    case 'mainDependent.hasVisualDisability':
-                        return mainDependent.hasVisualDisability;
-                    case 'mainDependent.hasMultipleDisabilities':
-                        return mainDependent.hasMultipleDisabilities;
-                    case 'mainDependent.hasMentalDisability':
-                        return mainDependent.hasMentalDisability;
-                    case 'mainDependent.hasOtherDisabilities':
-                        return mainDependent.hasOtherDisabilities;
-                    case 'mainDependent.totalWithDisability':
-                        return mainDependent.totalWithDisability;
-                    case 'mainDependent.hasMicrocephaly':
-                        return mainDependent.hasMicrocephaly;
-                    case 'mainDependent.totalChronicDiseases':
-                        return mainDependent.totalChronicDiseases;
-                    case 'mainDependent.hasCancer':
-                        return mainDependent.hasCancer;
-                    default:
-                        break;
-                }
-            }
+        const value = getMainDependentValue(src, path);
+        if (value !== undefined) {
+            return value;
         }
 
         const tokens = path
@@ -1015,6 +1056,32 @@ export function useFormPersonOnlinePage() {
         return typeof cur === 'string' || typeof cur === 'number' ? cur : '';
     }
 
+    function getMainDependentValue(
+        src: { dependents?: DependentType[] },
+        path: string
+    ) {
+        if (!path.startsWith("mainDependent.")) return undefined;
+
+        const mainDependent = findMainDependent(src);
+
+        if (!mainDependent) return undefined;
+
+        const field = path.replace("mainDependent.", "") as keyof DependentType;
+
+        return mainDependent[field];
+    }
+
+    function findMainDependent(
+        src: { dependents?: (DependentType | null)[] | null }
+    ): DependentType | undefined {
+        const list = (src.dependents ?? []).filter(Boolean) as DependentType[];
+        return list.find(
+            dp =>
+                dp.descriptionOfDisabilities == null &&
+                dp.dependentsWithDisabilitiesNames == null
+        );
+    }
+
     function getPersonOnlineString(path: string): string {
         return String(getPersonOnlineValue(path, 'text') ?? '');
     }
@@ -1055,22 +1122,36 @@ export function useFormPersonOnlinePage() {
         if (path.startsWith('mainDependent.')) {
             const field = path.replace('mainDependent.', '') as K;
 
-            let dependent = personOnline.value.dependents?.find(
-                dp => dp.descriptionOfDisabilities == null && dp.dependentsWithDisabilitiesNames == null
-            );
+            let dependent = findMainDependent({ dependents: personOnline.value.dependents ?? [] });
 
             if (!dependent) {
                 if (!personOnline.value.dependents) {
                     personOnline.value.dependents = [];
                 }
                 dependent = createDefaultDependent();
-
-                dependent[field] = value as DependentType[K];
-
                 personOnline.value.dependents.push(dependent);
-            } else {
-                dependent[field] = value as DependentType[K];
             }
+
+            if (
+                (field === 'totalWithDisability' || field === 'totalChronicDiseases') &&
+                typeof value === 'number' &&
+                value !== null
+            ) {
+                const oldValue = dependent[field] as number | null;
+
+                if (oldValue != null && value < oldValue) {
+                    const toRemove = oldValue - value;
+
+                    if (field === 'totalWithDisability') {
+                        removeDependentsFromList('disability', toRemove);
+                    } else if (field === 'totalChronicDiseases') {
+                        removeDependentsFromList('chronic', toRemove);
+                    }
+                }
+            }
+
+            dependent[field] = value as DependentType[K];
+            return;
         }
 
         const keys = path.split('.');
@@ -1082,9 +1163,34 @@ export function useFormPersonOnlinePage() {
             }
             return acc[key] as Record<string, unknown>;
         }, root)[keys[keys.length - 1]!] = value;
+    }
 
-        console.log(personOnline.value);
+    function removeDependentsFromList(listType: 'disability' | 'chronic', count: number) {
+        if (!personOnline.value.dependents) return;
 
+        if (listType === 'disability') {
+            const disabilityDeps = personOnline.value.dependents.filter(
+                d => d.descriptionOfDisabilities != null &&
+                    d.dependentsWithDisabilitiesNames != null &&
+                    d.hasDegenerativeDisease == null
+            );
+            disabilityDeps.slice(-count).forEach(dep => {
+                const idx = personOnline.value.dependents!.indexOf(dep);
+                if (idx > -1) personOnline.value.dependents!.splice(idx, 1);
+            });
+        }
+
+        if (listType === 'chronic') {
+            const chronicDeps = personOnline.value.dependents.filter(
+                d => d.dependentsWithDisabilitiesNames != null &&
+                    d.descriptionOfDisabilities != null &&
+                    d.hasDegenerativeDisease != null
+            );
+            chronicDeps.slice(-count).forEach(dep => {
+                const idx = personOnline.value.dependents!.indexOf(dep);
+                if (idx > -1) personOnline.value.dependents!.splice(idx, 1);
+            });
+        }
     }
 
     function getRaw(path: string): unknown {
@@ -1301,6 +1407,12 @@ export function useFormPersonOnlinePage() {
         setPersonOnlineValue,
         incomeModel,
         hasError,
-        getErrorMessage
+        getErrorMessage,
+        mainDependent,
+        openDependentDialog,
+        dependentForm,
+        showDependentDialog,
+        dependentType,
+        saveDependent
     };
 }

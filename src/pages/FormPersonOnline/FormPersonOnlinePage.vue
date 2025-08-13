@@ -101,25 +101,73 @@
                             </div>
                         </q-card>
 
-                        <div v-if="section.title === 'Dependentes'" class="row q-col-gutter-md q-mt-md"
-                            style="width: 100%;">
+                        <div v-if="section.title === 'Dependentes'" class="q-gutter-y-md" style="width:100%;">
+                            <div class="row q-col-gutter-md items-start">
 
-                            <div v-if="personOnline.dependents?.find(dp => dp.descriptionOfDisabilities == null && dp.dependentsWithDisabilitiesNames == null)?.totalWithDisability != null"
-                                class="col-12 col-md-6">
-                                <div class="text-subtitle2 text-weight-medium q-mb-sm">Doença Crônica</div>
-                                <q-table flat dense square separator="cell" :rows="chronicDiseaseRows"
-                                    :table-class="$q.dark.isActive ? 'table-dark' : 'table-light'"
-                                    :columns="chronicColumns" row-key="__key" hide-bottom style="width: 100%;" />
+                                <div v-if="mainDependent?.totalChronicDiseases != null && mainDependent.totalChronicDiseases > 0"
+                                    class="col-12 col-md-6">
+                                    <div class="row items-center no-wrap q-mb-sm">
+                                        <div class="col">
+                                            <div class="text-subtitle2 text-weight-medium">Doença Crônica</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <q-btn label="Novo" color="primary" icon="add"
+                                                @click="openDependentDialog('chronic')" />
+                                        </div>
+                                    </div>
+
+                                    <q-table flat dense square hide-bottom separator="cell" :rows="chronicDiseaseRows"
+                                        :columns="chronicColumns"
+                                        :table-class="$q.dark.isActive ? 'table-dark' : 'table-light'"
+                                        style="width:100%;" row-key="__key" />
+                                </div>
+
+                                <div v-if="mainDependent?.totalWithDisability != null && mainDependent.totalWithDisability > 0"
+                                    class="col-12 col-md-6">
+                                    <div class="row items-center no-wrap q-mb-sm">
+                                        <div class="col">
+                                            <div class="text-subtitle2 text-weight-medium">Deficiência</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <q-btn label="Novo" color="primary" icon="add"
+                                                @click="openDependentDialog('disability')" />
+                                        </div>
+                                    </div>
+
+                                    <q-table flat dense square hide-bottom separator="cell" :rows="disabilityRows"
+                                        :columns="disabilityColumns"
+                                        :table-class="$q.dark.isActive ? 'table-dark' : 'table-light'"
+                                        style="width:100%;" row-key="__key" />
+                                </div>
+
                             </div>
 
-                            <div v-if="personOnline.dependents?.find(dp => dp.descriptionOfDisabilities == null && dp.dependentsWithDisabilitiesNames == null)?.totalChronicDiseases != null"
-                                class="col-12 col-md-6">
-                                <div class="text-subtitle2 text-weight-medium q-mb-sm">Deficiência</div>
-                                <q-table flat dense square separator="cell" :rows="disabilityRows"
-                                    :table-class="$q.dark.isActive ? 'table-dark' : 'table-light'"
-                                    :columns="disabilityColumns" row-key="__key" hide-bottom style="width: 100%;" />
-                            </div>
+                            <q-dialog v-model="showDependentDialog" persistent>
+                                <q-card style="min-width: 400px;">
+                                    <q-card-section>
+                                        <div class="text-h6">
+                                            {{ dependentType === 'chronic'
+                                                ? 'Novo Dependente - Doença Crônica'
+                                                : 'Novo Dependente - Deficiência' }}
+                                        </div>
+                                    </q-card-section>
 
+                                    <q-card-section>
+                                        <q-input v-model="dependentForm.dependentsWithDisabilitiesNames"
+                                            label="Nome do Dependente" dense outlined />
+                                        <q-input v-model="dependentForm.descriptionOfDisabilities" label="Descrição"
+                                            dense outlined class="q-mt-sm" />
+                                        <q-toggle v-if="dependentType === 'chronic'"
+                                            v-model="dependentForm.hasDegenerativeDisease" label="Doença Degenerativa"
+                                            class="q-mt-sm" />
+                                    </q-card-section>
+
+                                    <q-card-actions align="right">
+                                        <q-btn flat label="Cancelar" v-close-popup />
+                                        <q-btn color="primary" label="Salvar" @click="saveDependent" />
+                                    </q-card-actions>
+                                </q-card>
+                            </q-dialog>
                         </div>
                     </template>
                 </div>
@@ -164,7 +212,13 @@ const {
     setPersonOnlineValue,
     incomeModel,
     hasError,
-    getErrorMessage
+    getErrorMessage,
+    mainDependent,
+    openDependentDialog,
+    dependentForm,
+    showDependentDialog,
+    dependentType,
+    saveDependent
 } = useFormPersonOnlinePage();
 const registerRef = ref<HTMLElement | null>(null);
 
