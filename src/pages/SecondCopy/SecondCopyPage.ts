@@ -1014,7 +1014,6 @@ async function loadSelectOptions() {
         setFieldOptionsByKey('spouseProfession.description', professionOptions);
     } catch (e) {
         console.error('Erro ao carregar opções:', e);
-        notifyWarning('Não foi possível carregar algumas listas. Tente novamente mais tarde.');
     }
 }
 
