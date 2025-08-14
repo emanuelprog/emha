@@ -4,7 +4,7 @@ import { ref } from "vue";
 
 export function useCompletedFormPage() {
 
-    const isRegister = window.location.hostname.includes("cadastro");
+    const isRegister = window.location.pathname.includes("cadastro");
 
     const isProofLoading = ref(false);
     const isProtocolLoading = ref(false);
@@ -38,7 +38,7 @@ export function useCompletedFormPage() {
 
         const birtUrl = import.meta.env.VITE_BIRT_URL;
 
-        const url = `${birtUrl}emhonlrel.rptdesign&__format=pdf&protocolo=${inscriptionStore.selectedInscription?.id}`;
+        const url = `${birtUrl}emhonlrel.rptdesign&__format=pdf&protocolo=${personOnlineStore.selectedPersonOnline?.registrationPassword}`;
 
         window.open(url, '_blank');
 

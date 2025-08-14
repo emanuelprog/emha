@@ -7,6 +7,7 @@ import { fetchPersonOnlineByFilters, fetchSpouse } from 'src/services/personOnli
 import { fetchUser } from 'src/services/userService';
 import { useEventStore } from 'src/stores/eventStore';
 import { usePersonOnlineStore } from 'src/stores/personOnlineStore';
+import { useTermStore } from 'src/stores/termStore';
 import { createPersonOnlineForm, type PersonOnlineType } from 'src/types/personOnlineType';
 import { isUnder18 } from 'src/util/ageValidator';
 import { formatDate } from 'src/util/dateUtil';
@@ -34,6 +35,7 @@ export function useValidateFormPage() {
     const validate = ref(false);
     const router = useRouter();
     const eventStore = useEventStore();
+    const termStore = useTermStore();
     const personOnlineStore = usePersonOnlineStore();
 
     const loading = ref(false);
@@ -42,7 +44,7 @@ export function useValidateFormPage() {
     const isBirthDateValidated = ref(false);
     const showPassword = ref(false);
 
-    const isRegister = window.location.hostname.includes("cadastro");
+    const isRegister = window.location.pathname.includes("cadastro");
 
     async function loadPersonOnline(): Promise<void> {
         loading.value = true;
@@ -122,8 +124,13 @@ export function useValidateFormPage() {
     }
 
     async function onBack() {
-        eventStore.setSelectedEventComponent(null);
-        await router.push('/modulo-evento');
+        if (isRegister) {
+            termStore.setSelectedRegisterTermAccepted(false);
+            await router.push('/termo-aceite');
+        } else {
+            eventStore.setSelectedEventComponent(null);
+            await router.push('/modulo-evento');
+        }
     }
 
     async function onValidate() {

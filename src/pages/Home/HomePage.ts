@@ -12,7 +12,7 @@ export function useHomePage() {
     {
       title: 'Cadastro',
       description: 'Cadastre-se para receber benefício de habitação',
-      route: '/cadastro',
+      route: '/termo-documento',
       animationPath: '/animations/register.json',
       bg: 'bg-primary',
       text: 'text-white',

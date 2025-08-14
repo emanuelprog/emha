@@ -84,7 +84,7 @@ const personOnlineStore = usePersonOnlineStore();
 
 const navItems = [
   { label: '', route: 'inicio', icon: 'home' },
-  { label: 'Cadastro', route: 'cadastro' },
+  { label: 'Cadastro', route: 'termo-documento' },
   { label: 'Área do Mutuário', route: 'area-do-mutuario' },
   { label: 'Cadastrados', route: 'cadastrados' },
   { label: 'Beneficiados', route: 'beneficiados' },

@@ -1032,7 +1032,7 @@ export function useFormPersonOnlinePage() {
     const eventStore = useEventStore();
     const loadingInscribe = ref(false);
 
-    const isRegister = window.location.hostname.includes("cadastro");
+    const isRegister = window.location.pathname.includes("cadastro");
 
     const mainDependent = computed(() =>
         findMainDependent({ dependents: personOnline.value.dependents })
@@ -1510,13 +1510,6 @@ export function useFormPersonOnlinePage() {
 
         const raw = getRaw(field.key);
 
-        if (field.key.toLowerCase().includes('dependent')) {
-            console.log(field.key);
-
-            console.log(raw);
-
-        }
-
         return isEmptyValue(raw, field.type);
     }
 
@@ -1651,9 +1644,6 @@ export function useFormPersonOnlinePage() {
 
         const firstInvalidKey = validateRequiredFields();
 
-        console.log(firstInvalidKey);
-
-
         if (firstInvalidKey) {
             await nextTick(() => scrollToField(firstInvalidKey));
             return;
@@ -1693,14 +1683,16 @@ export function useFormPersonOnlinePage() {
                     const created = await createInscription(newInscription);
                     inscriptionStore.setSelectedInscription(created);
                 } else {
-                    await updateInscription(newInscription);
+                    const updated = await updateInscription(newInscription);
+                    inscriptionStore.setSelectedInscription(updated);
                 }
             } else {
                 if (!personOnline.value.id) {
                     const created = await createPersonOnline(personOnline.value);
                     personOnlineStore.setSelectedPersonOnline(created);
                 } else {
-                    await updatePersonOnline(personOnline.value);
+                    const updated = await updatePersonOnline(personOnline.value);
+                    personOnlineStore.setSelectedPersonOnline(updated);
                 }
             }
 
