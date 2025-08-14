@@ -134,9 +134,9 @@
             <div v-if="showEvent && !loading">
                 <div v-if="showEvent && !loading" class="q-mt-xl"
                     style="width: 100%; max-width: 1200px; min-width: 1200px;">
-                    <q-table title="Inscrições do Evento" :rows="inscriptions" :columns="columns" row-key="id"
-                        :pagination="pagination" :loading="loading" flat bordered dense hide-bottom
-                        no-data-label="Nenhuma inscrição encontrada.">
+                    <q-table :table-class="$q.dark.isActive ? 'table-dark' : 'table-light'" :rows="inscriptions"
+                        :columns="columns" row-key="id" :pagination="pagination" :loading="loading" flat bordered dense
+                        hide-bottom no-data-label="Nenhuma inscrição encontrada.">
                         <template #body-cell-actions="props">
                             <q-td :props="props">
                                 <q-btn color="primary" icon="print" dense flat
