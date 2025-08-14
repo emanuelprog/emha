@@ -127,7 +127,7 @@
 
             <div v-if="showPersonOnlineFields && !loading && showAll" class="row q-gutter-md justify-center q-my-lg">
                 <q-btn label="Imprimir Protocolo" color="primary" @click="onPrintSecondCopy" :disable="loading"
-                    :loading="isSecondCopyLoading" />
+                    :loading="isSecondCopyLoading" rounded />
                 <q-btn label="Voltar" flat color="grey-7" @click="onBackRegister" :disable="loading" />
             </div>
 
