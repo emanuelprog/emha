@@ -9,7 +9,7 @@
             </div>
             <div class="text-subtitle1 text-grey-7 q-mb-lg">
                 Obrigado por concluir {{ isRegister ? 'seu cadastro' : 'sua inscrição' }}.
-                Você pode imprimir seu comprovante ou protocolo abaixo.
+                Você pode imprimir seu {{ isRegister ? 'comprovante ou protocolo' : 'comprovante' }} abaixo.
             </div>
 
             <div class="column q-gutter-md" style="width: 100%;">
