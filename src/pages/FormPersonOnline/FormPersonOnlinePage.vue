@@ -6,7 +6,7 @@
             <div v-if="personOnline" flat bordered style="max-width: 1100px; width: 100%;">
                 <div class="row q-col-gutter-md">
                     <template v-for="(section, idx) in personOnlineFieldSections" :key="idx">
-                        <q-card flat class="q-pt-md col-12 bg-white">
+                        <q-card flat class="q-pt-md bg-white q-pa-md" style="width: 100%;">
                             <h5 class="text-grey-7 text-center q-mb-md">
                                 {{ section.title }}
                             </h5>
@@ -18,7 +18,7 @@
                             <div class="row q-col-gutter-md">
                                 <template v-for="(field, index) in section.fields" :key="index">
                                     <q-input
-                                        v-if="field.type === 'text' && field.key !== 'income' && field.key !== 'formattedRentValue' && field.key !== 'cep' && evalCond(field, personOnline)"
+                                        v-if="field.type === 'text' && field.key !== 'income' && field.key !== 'formattedRentValue' && field.key !== 'addresses[0].zipCode' && evalCond(field, personOnline)"
                                         type="text" :label="field.label" :mask="field.mask" :title="field.label"
                                         :model-value="getPersonOnlineString(field.key)" filled :disable="field.disable"
                                         @update:model-value="setPersonOnlineValue(field.key, $event)"
@@ -27,11 +27,11 @@
                                         :class="[{ 'required-label': isFieldRequired(field) }, field.cols]" />
 
                                     <q-input
-                                        v-if="field.type === 'text' && field.key === 'cep' && evalCond(field, personOnline)"
+                                        v-if="field.type === 'text' && field.key === 'addresses[0].zipCode' && evalCond(field, personOnline)"
                                         type="text" :label="field.label" :mask="field.mask" :title="field.label"
                                         :model-value="getPersonOnlineString(field.key)" filled :disable="field.disable"
                                         @update:model-value="setPersonOnlineValue(field.key, $event)"
-                                        @blur="onCepBlur(getPersonOnlineString(field.key))" :error="hasError(field)"
+                                        @blur="onCepBlur($event)" :error="hasError(field)"
                                         :error-message="getErrorMessage(field)" :data-key="field.key"
                                         :class="[{ 'required-label': isFieldRequired(field) }, field.cols]" />
 
@@ -125,101 +125,100 @@
                                     </q-input>
                                 </template>
                             </div>
-                        </q-card>
+                            <div v-if="section.title === 'Dependentes'" class="q-gutter-y-md" style="width:100%;">
+                                <div class="row q-col-gutter-md items-start">
 
-                        <div v-if="section.title === 'Dependentes'" class="q-gutter-y-md" style="width:100%;">
-                            <div class="row q-col-gutter-md items-start">
+                                    <div v-if="mainDependent?.totalChronicDiseases != null && mainDependent.totalChronicDiseases > 0"
+                                        class="col-12 col-md-6">
+                                        <div class="row items-center no-wrap q-mb-sm">
+                                            <div class="col">
+                                                <div class="text-subtitle2 text-weight-medium">Doença Crônica</div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <q-btn label="Novo" color="primary" icon="add"
+                                                    @click="openDependentDialog('chronic')" />
+                                            </div>
+                                        </div>
 
-                                <div v-if="mainDependent?.totalChronicDiseases != null && mainDependent.totalChronicDiseases > 0"
-                                    class="col-12 col-md-6">
-                                    <div class="row items-center no-wrap q-mb-sm">
-                                        <div class="col">
-                                            <div class="text-subtitle2 text-weight-medium">Doença Crônica</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <q-btn label="Novo" color="primary" icon="add"
-                                                @click="openDependentDialog('chronic')" />
-                                        </div>
+                                        <q-table flat dense square hide-bottom separator="cell"
+                                            :rows="chronicDiseaseRows" :columns="chronicColumns"
+                                            :table-class="$q.dark.isActive ? 'table-dark' : 'table-light'"
+                                            style="width:100%;" row-key="__key" />
                                     </div>
 
-                                    <q-table flat dense square hide-bottom separator="cell" :rows="chronicDiseaseRows"
-                                        :columns="chronicColumns"
-                                        :table-class="$q.dark.isActive ? 'table-dark' : 'table-light'"
-                                        style="width:100%;" row-key="__key" />
-                                </div>
+                                    <div v-if="mainDependent?.totalWithDisability != null && mainDependent.totalWithDisability > 0"
+                                        class="col-12 col-md-6">
+                                        <div class="row items-center no-wrap q-mb-sm">
+                                            <div class="col">
+                                                <div class="text-subtitle2 text-weight-medium">Deficiência</div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <q-btn label="Novo" color="primary" icon="add"
+                                                    @click="openDependentDialog('disability')" />
+                                            </div>
+                                        </div>
 
-                                <div v-if="mainDependent?.totalWithDisability != null && mainDependent.totalWithDisability > 0"
-                                    class="col-12 col-md-6">
-                                    <div class="row items-center no-wrap q-mb-sm">
-                                        <div class="col">
-                                            <div class="text-subtitle2 text-weight-medium">Deficiência</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <q-btn label="Novo" color="primary" icon="add"
-                                                @click="openDependentDialog('disability')" />
-                                        </div>
+                                        <q-table flat dense square hide-bottom separator="cell" :rows="disabilityRows"
+                                            :columns="disabilityColumns"
+                                            :table-class="$q.dark.isActive ? 'table-dark' : 'table-light'"
+                                            style="width:100%;" row-key="__key" />
                                     </div>
 
-                                    <q-table flat dense square hide-bottom separator="cell" :rows="disabilityRows"
-                                        :columns="disabilityColumns"
-                                        :table-class="$q.dark.isActive ? 'table-dark' : 'table-light'"
-                                        style="width:100%;" row-key="__key" />
                                 </div>
 
+                                <q-dialog v-model="showDependentDialog" persistent>
+                                    <q-card style="min-width: 400px;">
+                                        <q-card-section>
+                                            <div class="text-h6">
+                                                {{ dependentType === 'chronic'
+                                                    ? 'Novo Dependente - Doença Crônica'
+                                                    : 'Novo Dependente - Deficiência' }}
+                                            </div>
+                                        </q-card-section>
+
+                                        <q-card-section>
+                                            <q-input v-model="dependentForm.dependentsWithDisabilitiesNames"
+                                                label="Nome do Dependente" filled
+                                                :error="validateDependent && (dependentForm.dependentsWithDisabilitiesNames == null || dependentForm.dependentsWithDisabilitiesNames == '')"
+                                                error-message="Campo obrigatório" />
+                                            <q-input v-model="dependentForm.descriptionOfDisabilities" label="Descrição"
+                                                filled class="q-mt-sm"
+                                                :error="validateDependent && (dependentForm.descriptionOfDisabilities == null || dependentForm.descriptionOfDisabilities == '')"
+                                                error-message="Campo obrigatório" />
+                                            <div v-if="dependentType === 'chronic'" class="q-mt-sm">
+                                                <div class="text-subtitle2 q-mb-xs">Doença Degenerativa</div>
+                                                <q-field
+                                                    :error="validateDependent && dependentForm.hasDegenerativeDisease === null"
+                                                    error-message="Campo obrigatório" borderless>
+                                                    <template v-slot:control>
+                                                        <q-option-group v-model="dependentForm.hasDegenerativeDisease"
+                                                            :options="[
+                                                                { label: 'Sim', value: true },
+                                                                { label: 'Não', value: false }
+                                                            ]" type="radio" color="primary" inline />
+                                                    </template>
+                                                </q-field>
+                                            </div>
+                                        </q-card-section>
+
+                                        <q-card-actions align="right">
+                                            <q-btn flat label="Cancelar" v-close-popup />
+                                            <q-btn color="primary" label="Salvar" @click="saveDependent" />
+                                        </q-card-actions>
+                                    </q-card>
+                                </q-dialog>
                             </div>
-
-                            <q-dialog v-model="showDependentDialog" persistent>
-                                <q-card style="min-width: 400px;">
-                                    <q-card-section>
-                                        <div class="text-h6">
-                                            {{ dependentType === 'chronic'
-                                                ? 'Novo Dependente - Doença Crônica'
-                                                : 'Novo Dependente - Deficiência' }}
-                                        </div>
-                                    </q-card-section>
-
-                                    <q-card-section>
-                                        <q-input v-model="dependentForm.dependentsWithDisabilitiesNames"
-                                            label="Nome do Dependente" filled
-                                            :error="validateDependent && (dependentForm.dependentsWithDisabilitiesNames == null || dependentForm.dependentsWithDisabilitiesNames == '')"
-                                            error-message="Campo obrigatório" />
-                                        <q-input v-model="dependentForm.descriptionOfDisabilities" label="Descrição"
-                                            filled class="q-mt-sm"
-                                            :error="validateDependent && (dependentForm.descriptionOfDisabilities == null || dependentForm.descriptionOfDisabilities == '')"
-                                            error-message="Campo obrigatório" />
-                                        <div v-if="dependentType === 'chronic'" class="q-mt-sm">
-                                            <div class="text-subtitle2 q-mb-xs">Doença Degenerativa</div>
-                                            <q-field
-                                                :error="validateDependent && dependentForm.hasDegenerativeDisease === null"
-                                                error-message="Campo obrigatório" borderless>
-                                                <template v-slot:control>
-                                                    <q-option-group v-model="dependentForm.hasDegenerativeDisease"
-                                                        :options="[
-                                                            { label: 'Sim', value: true },
-                                                            { label: 'Não', value: false }
-                                                        ]" type="radio" color="primary" inline />
-                                                </template>
-                                            </q-field>
-                                        </div>
-                                    </q-card-section>
-
-                                    <q-card-actions align="right">
-                                        <q-btn flat label="Cancelar" v-close-popup />
-                                        <q-btn color="primary" label="Salvar" @click="saveDependent" />
-                                    </q-card-actions>
-                                </q-card>
-                            </q-dialog>
-                        </div>
+                        </q-card>
                     </template>
                 </div>
 
                 <q-separator class="q-mt-md" />
 
                 <q-card-actions align="between" class="q-pa-md">
-                    <q-btn label="Voltar" color="grey-7" flat @click="onBack" :disable="loadingInscribe" />
+                    <q-btn label="Voltar" color="grey-7" flat @click="onBack" :disable="loadingSubmit" />
                     <div class="row items-center q-gutter-sm">
                         <q-btn :label="isRegister ? 'Cadastrar' : 'Inscrever'" color="positive" @click="onSubmit"
-                            :loading="loadingInscribe" :disable="loadingInscribe" />
+                            :loading="loadingSubmit" :disable="loadingSubmit" />
                     </div>
                 </q-card-actions>
             </div>
@@ -234,7 +233,7 @@ import './FormPersonOnlinePage.scss';
 import lottie from 'lottie-web';
 
 const {
-    loadingInscribe,
+    loadingSubmit,
     personOnline,
     onSubmit,
     onBack,

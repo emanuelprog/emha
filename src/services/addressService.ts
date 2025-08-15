@@ -1,9 +1,9 @@
 import { api } from 'boot/axios';
 
-export async function fetchAddressByCep(cep: string) {
-    const response = await api.get('/address/cep', {
+export async function fetchAddressByZipCode(zipCode: string) {
+    const response = await api.get('/address/zipCode', {
         params: {
-            cep: cep
+            zipCode: zipCode
         }
     });
 

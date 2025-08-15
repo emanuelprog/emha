@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { QTableColumn } from 'quasar';
-import { fetchAddressByCep } from 'src/services/addressService';
+import { fetchAddressByZipCode } from 'src/services/addressService';
 import { fetchCharts } from 'src/services/chartService';
 import { fetchDeficiencies } from 'src/services/deficiencyService';
 import { createInscription, updateInscription } from 'src/services/inscriptionService';
@@ -253,8 +253,12 @@ export function useFormPersonOnlinePage() {
                 {
                     key: 'isViolenceVictim',
                     label: 'Mulher vítima de violência',
-                    type: 'checkbox',
+                    type: 'radio',
                     cols: 'col-12 col-sm-6 col-md-4',
+                    options: [
+                        { label: 'Sim', value: true },
+                        { label: 'Não', value: false }
+                    ],
                     condition: (p) => p?.gender === 'F',
                     required: (p) => p?.gender === 'F',
                     requiredMessage: 'Mulher vítima de violência é obrigatório'
@@ -926,7 +930,7 @@ export function useFormPersonOnlinePage() {
                     key: 'wantsApartment',
                     label: 'Apartamento',
                     type: 'checkbox',
-                    cols: 'col-12 col-md-2',
+                    cols: 'col-12 col-md-4',
                     condition: (p) => {
                         const total = [
                             p?.wantsApartment,
@@ -940,7 +944,7 @@ export function useFormPersonOnlinePage() {
                     key: 'wantsHouse',
                     label: 'Casa',
                     type: 'checkbox',
-                    cols: 'col-12 col-md-2',
+                    cols: 'col-12 col-md-4',
                     condition: (p) => {
                         const total = [
                             p?.wantsApartment,
@@ -954,7 +958,7 @@ export function useFormPersonOnlinePage() {
                     key: 'wantsLand',
                     label: 'Terreno',
                     type: 'checkbox',
-                    cols: 'col-12 col-md-2',
+                    cols: 'col-12 col-md-4',
                     condition: (p) => {
                         const total = [
                             p?.wantsApartment,
@@ -1030,7 +1034,7 @@ export function useFormPersonOnlinePage() {
     const validateDependent = ref(false);
     const router = useRouter();
     const eventStore = useEventStore();
-    const loadingInscribe = ref(false);
+    const loadingSubmit = ref(false);
 
     const isRegister = window.location.pathname.includes("cadastro");
 
@@ -1047,11 +1051,14 @@ export function useFormPersonOnlinePage() {
         hasDegenerativeDisease: null
     });
 
-    async function onCepBlur(cep: string) {
-        if (!cep || cep.length < 8) return;
+    async function onCepBlur(event: Event) {
+        const target = event.target as HTMLInputElement;
+        const zipCode = target.value?.replace(/\D/g, '');
+
+        if (!zipCode || zipCode.length < 8) return;
 
         try {
-            const address = await fetchAddressByCep(cep);
+            const address = await fetchAddressByZipCode(zipCode);
 
             if (!personOnline.value.addresses) {
                 personOnline.value.addresses = [];
@@ -1062,7 +1069,7 @@ export function useFormPersonOnlinePage() {
             if (!targetAddress) {
                 targetAddress = {
                     id: 0,
-                    zipCode: cep,
+                    zipCode: zipCode,
                     street: '',
                     city: '',
                     region: '',
@@ -1078,9 +1085,9 @@ export function useFormPersonOnlinePage() {
                 targetAddress.neighborhood = address.neighborhood;
                 targetAddress.city = address.city;
                 targetAddress.region = address.state;
-                targetAddress.zipCode = cep;
+                targetAddress.zipCode = zipCode;
             } else {
-                targetAddress.zipCode = cep;
+                targetAddress.zipCode = zipCode;
             }
 
         } catch (error) {
@@ -1651,16 +1658,19 @@ export function useFormPersonOnlinePage() {
 
         if (!validateDependentsCount()) return;
 
+        loadingSubmit.value = true;
+
         await Promise.all([
             proccess(),
-            sleep(1000)
+            sleep(1500)
         ]);
 
-        loadingInscribe.value = false;
+        await router.push(isRegister ? '/cadastro-concluido' : '/inscricao-concluida');
+
+        loadingSubmit.value = false;
     }
 
     async function proccess(): Promise<void> {
-        loadingInscribe.value = true;
         const inscriptionStore = useInscriptionStore();
 
         try {
@@ -1696,8 +1706,6 @@ export function useFormPersonOnlinePage() {
                 }
             }
 
-            await router.push(isRegister ? '/cadastro-concluido' : '/inscricao-concluida');
-
         } catch (error) {
             let errorMessage = 'Erro ao processar.';
 
@@ -1707,8 +1715,6 @@ export function useFormPersonOnlinePage() {
 
             console.error('Erro ao processar:', error);
             notifyError(errorMessage);
-        } finally {
-            loadingInscribe.value = false;
         }
     }
 
@@ -1759,7 +1765,7 @@ export function useFormPersonOnlinePage() {
     }
 
     return {
-        loadingInscribe,
+        loadingSubmit,
         personOnline,
         onSubmit,
         onBack,

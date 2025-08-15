@@ -170,10 +170,6 @@ export function useValidateFormPage() {
     async function verifyEvent(): Promise<boolean> {
         if (!eventStore.selectedEventComponent?.id) return false;
 
-        loading.value = true;
-
-        await sleep(1500);
-
         try {
             await fetchInscriptionsBySpouseAndEventComponent({
                 name: '',
@@ -187,7 +183,6 @@ export function useValidateFormPage() {
                 registrationPassword: ''
             });
 
-            loading.value = false;
             return true;
         } catch (error: unknown) {
             if (axios.isAxiosError(error) && error.response?.data?.message && error.response.data.code) {
@@ -201,7 +196,6 @@ export function useValidateFormPage() {
                 notifyError('Erro desconhecido.');
             }
 
-            loading.value = false;
             return false;
         }
     }
@@ -246,8 +240,6 @@ export function useValidateFormPage() {
     }
 
     async function verifySpouseRegister(): Promise<boolean> {
-        loading.value = true;
-
         await sleep(1500);
 
         try {
@@ -257,8 +249,6 @@ export function useValidateFormPage() {
                     cpf: keycloak.tokenParsed?.cpf ? formatCpfForSearch(keycloak.tokenParsed?.cpf) : keycloak.tokenParsed?.cpf,
                     registrationPassword: ''
                 });
-
-            loading.value = false;
 
             return true;
         } catch (error: unknown) {
@@ -272,7 +262,6 @@ export function useValidateFormPage() {
             } else {
                 notifyError('Erro desconhecido.');
             }
-            loading.value = false;
             return false;
         }
     }
